@@ -1,0 +1,50 @@
+MASTER PROMPT À COPIER-COLLER DANS CLAUDE CODE
+Agis en tant que Développeur Full-Stack expert et Ingénieur Pédagogique. Je souhaite créer une Single Page Application (SPA) appelée "DIVE Transformation Hub". C'est un générateur interactif de plan stratégique (un "Pitch Deck" interactif) destiné à des dirigeants d'universités vietnamiennes pour encadrer l'adoption de l'IA.
+Stack Technique requise : React, Tailwind CSS pour un design moderne et institutionnel, Recharts pour les graphiques, et une librairie comme html2pdf.js ou jsPDF pour l'export final.
+Structure Globale de l'UI : L'application doit posséder une barre de navigation latérale (Sidebar) permettant de naviguer entre 4 modules (qui correspondent aux 4 jours d'un séminaire). En haut, une barre de progression globale. En bas du module 4, un bouton d'action principal "Générer l'Executive Report (PDF)".
+Voici les spécifications fonctionnelles et les données scientifiques exactes (hardcodées dans les states ou constants) pour chaque module :
+📍 MODULE 1 : Diagnostic de Maturité (L'état des lieux)
+Interface : Un formulaire interactif d'auto-évaluation et un graphique généré en temps réel. Données et Logique :
+
+Évaluation des 8 dimensions (Modèle MTM) : L'utilisateur évalue son institution sur 8 dimensions avec des menus déroulants ou des sliders.
+Les 8 dimensions : 1. Socio-culturelle, 2. Enseignement-apprentissage, 3. Gestion académique, 4. Gestion administrative, 5. Recherche et innovation, 6. Gouvernance numérique, 7. Image institutionnelle/marketing, 8. Extension universitaire
+.
+Les 3 niveaux de maturité (choix) : Niveau 1 (Débutant), Niveau 2 (En cours), Niveau 3 (Amélioration continue)
+.
+Rendu visuel : Utilise Recharts pour générer un "Graphique Radar" (Spider Chart) à 8 axes qui se met à jour instantanément selon les scores choisis.
+📍 MODULE 2 : Cartographie des Résistances Humaines
+Interface : Une liste dynamique de gestion des parties prenantes (Stakeholders) où l'on peut ajouter des profils et identifier leurs blocages. Données et Logique :
+Ajout d'acteur : Champs "Nom/Groupe" et menu déroulant "Rôle" (Étudiants, Professeurs, Administration, Direction).
+Menu déroulant "Type de Résistance" : L'utilisateur choisit le frein principal de cet acteur parmi ces options scientifiques :
+Anxiété d'apprentissage de l'IA
+Anxiété d'aveuglement sociotechnique (Peur d'être marginalisé)
+Anxiété de remplacement (Peur de perdre son utilité professionnelle)
+Résistance Prononcée (Oppositions / Refus idéologique)
+Résistance Subtile (Minimisation / Évitement)
+Barrières éthiques et pédagogiques perçues
+Logique intelligente de "Contre-mesures" : Le système affiche un conseil automatique basé sur le type de résistance sélectionné :
+Si "Barrières éthiques" est sélectionné : Afficher "Ne pas combattre ! Cette perception traduit un engagement critique et une responsabilité professionnelle. Utilisez ces acteurs pour rédiger les lignes directrices éthiques de l'université (Hong et al., 2026)."
+📍 MODULE 3 : Arsenal des Solutions (Use Cases)
+Interface : Un tableau de type portfolio ou liste de cartes (Cards). Fonctionnalité : L'utilisateur ajoute les prototypes IA imaginés. Chaque carte a 3 champs :
+"Nom de l'outil" (ex: Chatbot FAQ, Outil de création de Quiz).
+"Cible" (Étudiants, Professeurs, Administration).
+"Niveau de difficulté" (Faible, Moyen, Élevé). Ces cartes devront pouvoir être "glissées-déposées" dans le Module 4.
+📍 MODULE 4 : Plan d'Adoption à 90 Jours
+Interface : Un tableau de bord Kanban/Gantt simplifié avec 3 colonnes temporelles obligatoires. Données (Les 3 phases du Modèle Lewin adapté) :
+Phase 1 (Jours 1-30) : ACTIVATION (Objectif : Infrastructure, leadership, dégel des habitudes)
+.
+Phase 2 (Jours 31-60) : IMPLÉMENTATION (Objectif : Pédagogie, déploiement des outils, formation)
+.
+Phase 3 (Jours 61-90) : INSTITUTIONNALISATION (Objectif : Assurance qualité, KPI, intégration culturelle)
+. Logique Intelligente (Influence Sociale) : Demander à l'utilisateur d'assigner des "Champions Digitaux" pour porter le projet.
+Condition SI/SINON : Si le champion cible les "Étudiants" ou l'"Administration", afficher un message de succès : "Excellente stratégie : l'influence sociale et les pairs sont des moteurs d'adoption massifs pour ce public (Bui et al., 2025)."
+Mais si le champion cible les "Professeurs", afficher une Alerte Rouge : "Attention : chez les universitaires, l'utilisation de 'champions' peut déclencher une anxiété de remplacement ou être perçue comme de l'opportunisme. Privilégiez l'expérimentation isolée démontrant l'utilité individuelle (Cao Kai et al., 2026)."
+📄 EXPORT FINAL (Executive Report)
+Crée une fonction d'export qui compile ces 4 modules dans un format A4 élégant. Le pied de page (footer) du PDF généré doit impérativement contenir cette bibliographie scientifique pour donner du poids au document :
+Bravo-Jaico, J. et al. (2025). Model for assessing the maturity level of digital transformation in higher education institutions. Frontiers in Education.
+Bui, H. Q. et al. (2025). AI adoption: a new perspective from accounting students in Vietnam. Journal of Asian Business and Economic Studies.
+Cao, K. et al. (2026). AI anxiety and adoption intention in higher education based on an extended TAM-UTAUT. Scientific Reports.
+Deacon, B. et al. (2025). Resisting digital change at the university: an exploration into triggers and organisational countermeasures. European Journal of Higher Education.
+Hong, T. T. M. et al. (2026). Discovering acceptance and intention to use artificial intelligence for learning among pre-service teachers in Vietnam. Discover Education.
+Nguyen, H. L., & Hong, Y. (2025). National policy analysis of digital transformation in Vietnamese higher education. Policy Futures in Education.
+Nguyen, N. D., & Uong, L. N. T. (2026). Digital transformation in non-public universities: empirical evidence from Hanoi City. Cogent Social Sciences.
