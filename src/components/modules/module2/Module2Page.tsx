@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Plus, Trash2, AlertTriangle, Shield } from 'lucide-react';
 import { RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, STAKEHOLDER_ROLES, DISCIPLINES } from '../../../lib/constants';
 import { generateCounterMeasure } from '../../../lib/counter-measures';
-import type { Stakeholder, ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline } from '../../../types';
+import { useStore } from '../../../lib/store';
+import type { ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline } from '../../../types';
 
 export default function Module2Page() {
-  const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
+  const { stakeholders, setStakeholders } = useStore();
   const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({

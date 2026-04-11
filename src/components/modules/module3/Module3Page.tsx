@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Plus, Trash2, GripVertical, Wrench } from 'lucide-react';
 import { SOLUTION_TEMPLATES } from '../../../lib/constants';
-import type { SolutionCard, SolutionTarget, DifficultyLevel, SolutionStatus } from '../../../types';
+import { useStore } from '../../../lib/store';
+import type { SolutionTarget, DifficultyLevel, SolutionStatus } from '../../../types';
 
 const difficultyColors: Record<DifficultyLevel, string> = {
   Low: 'bg-accent-100 text-accent-700 border-accent-200',
@@ -16,7 +17,7 @@ const statusColors: Record<SolutionStatus, string> = {
 };
 
 export default function Module3Page() {
-  const [solutions, setSolutions] = useState<SolutionCard[]>([]);
+  const { solutions, setSolutions } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     name: '',

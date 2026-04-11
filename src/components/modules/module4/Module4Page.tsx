@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Plus, Trash2, AlertTriangle, CheckCircle, Target } from 'lucide-react';
 import { PLAN_PHASES } from '../../../lib/constants';
-import type { PlanTask, KPI, SolutionTarget, Priority, TaskStatus, KPIType, PlanPhase } from '../../../types';
+import { useStore } from '../../../lib/store';
+import type { SolutionTarget, Priority, TaskStatus, KPIType, PlanPhase } from '../../../types';
 
 export default function Module4Page() {
-  const [tasks, setTasks] = useState<PlanTask[]>([]);
-  const [kpis, setKpis] = useState<KPI[]>([]);
+  const { tasks, setTasks, kpis, setKpis } = useStore();
   const [showTaskForm, setShowTaskForm] = useState<number | null>(null);
   const [showKpiForm, setShowKpiForm] = useState(false);
 

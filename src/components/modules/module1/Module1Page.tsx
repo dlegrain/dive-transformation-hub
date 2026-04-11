@@ -1,34 +1,9 @@
-import { useState } from 'react';
 import DimensionForm from './DimensionForm';
 import RadarChart from './RadarChart';
-import type { DimensionKey, DimensionAssessment } from '../../../types';
-
-const defaultDimensions: Record<DimensionKey, DimensionAssessment> = {
-  socioCultural: { tools: 1, data: 1, culture: 1 },
-  teachingLearning: { tools: 1, data: 1, culture: 1 },
-  academicManagement: { tools: 1, data: 1, culture: 1 },
-  administrativeManagement: { tools: 1, data: 1, culture: 1 },
-  researchInnovation: { tools: 1, data: 1, culture: 1 },
-  digitalGovernance: { tools: 1, data: 1, culture: 1 },
-  institutionalImage: { tools: 1, data: 1, culture: 1 },
-  universityExtension: { tools: 1, data: 1, culture: 1 },
-};
+import { useStore } from '../../../lib/store';
 
 export default function Module1Page() {
-  const [dimensions, setDimensions] = useState(defaultDimensions);
-  const [institutionName, setInstitutionName] = useState('');
-  const [assessorName, setAssessorName] = useState('');
-
-  const handleChange = (
-    key: DimensionKey,
-    sub: 'tools' | 'data' | 'culture',
-    value: 1 | 2 | 3
-  ) => {
-    setDimensions((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], [sub]: value },
-    }));
-  };
+  const { dimensions, setDimension, institutionName, setInstitutionName, assessorName, setAssessorName } = useStore();
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -86,7 +61,7 @@ export default function Module1Page() {
           <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">
             Assessment
           </h3>
-          <DimensionForm dimensions={dimensions} onChange={handleChange} />
+          <DimensionForm dimensions={dimensions} onChange={setDimension} />
         </div>
         <div className="lg:sticky lg:top-6 lg:self-start">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">
