@@ -1,0 +1,289 @@
+import { useState } from 'react';
+import { Plus, Trash2, GripVertical, Wrench } from 'lucide-react';
+import { SOLUTION_TEMPLATES } from '../../../lib/constants';
+import type { SolutionCard, SolutionTarget, DifficultyLevel, SolutionStatus } from '../../../types';
+
+const difficultyColors: Record<DifficultyLevel, string> = {
+  Low: 'bg-accent-100 text-accent-700 border-accent-200',
+  Medium: 'bg-warning-100 text-warning-700 border-warning-200',
+  High: 'bg-danger-100 text-danger-700 border-danger-200',
+};
+
+const statusColors: Record<SolutionStatus, string> = {
+  Planned: 'bg-gray-100 text-gray-600',
+  Prototyped: 'bg-primary-100 text-primary-700',
+  Tested: 'bg-accent-100 text-accent-700',
+};
+
+export default function Module3Page() {
+  const [solutions, setSolutions] = useState<SolutionCard[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    target: 'Students' as SolutionTarget,
+    difficulty: 'Low' as DifficultyLevel,
+    status: 'Planned' as SolutionStatus,
+    problem_solved: '',
+    vibe_coding_notes: '',
+    platform_used: '',
+    assigned_phase: undefined as 1 | 2 | 3 | undefined,
+    linked_quick_win: '',
+  });
+
+  const suggestPhase = (difficulty: DifficultyLevel): 1 | 2 | 3 => {
+    if (difficulty === 'Low') return 1;
+    if (difficulty === 'Medium') return 2;
+    return 3;
+  };
+
+  const handleAdd = () => {
+    const phase = form.assigned_phase || suggestPhase(form.difficulty);
+    setSolutions((prev) => [
+      ...prev,
+      {
+        ...form,
+        id: crypto.randomUUID(),
+        group_id: '',
+        assigned_phase: phase,
+        sort_order: prev.length,
+      },
+    ]);
+    resetForm();
+  };
+
+  const handleAddTemplate = (template: typeof SOLUTION_TEMPLATES[number]) => {
+    const phase = suggestPhase(template.difficulty as DifficultyLevel);
+    setSolutions((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        group_id: '',
+        name: template.name,
+        target: template.target as SolutionTarget,
+        difficulty: template.difficulty as DifficultyLevel,
+        status: 'Planned',
+        problem_solved: template.problemSolved,
+        assigned_phase: phase,
+        sort_order: prev.length,
+      },
+    ]);
+  };
+
+  const handleRemove = (id: string) => {
+    setSolutions((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const handleUpdateStatus = (id: string, status: SolutionStatus) => {
+    setSolutions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status } : s))
+    );
+  };
+
+  const handleUpdateNotes = (id: string, vibe_coding_notes: string) => {
+    setSolutions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, vibe_coding_notes } : s))
+    );
+  };
+
+  const resetForm = () => {
+    setForm({
+      name: '', target: 'Students', difficulty: 'Low', status: 'Planned',
+      problem_solved: '', vibe_coding_notes: '', platform_used: '',
+      assigned_phase: undefined, linked_quick_win: '',
+    });
+    setShowForm(false);
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 text-xs text-primary-600 font-medium mb-1">
+          <span className="bg-primary-100 px-2 py-0.5 rounded">Day 3</span>
+          Module 3
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900">
+          AI Solutions Arsenal
+        </h2>
+        <p className="text-gray-500 mt-1">
+          Catalogue your AI use cases. Pick one quick win from this morning's roadmap and build it with vibe coding.
+        </p>
+      </div>
+
+      {/* Quick-start templates */}
+      {solutions.length === 0 && (
+        <div className="mb-6 bg-primary-50 border border-primary-200 rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-primary-800 mb-3">
+            Quick Start — Use a Template
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {SOLUTION_TEMPLATES.map((t) => (
+              <button
+                key={t.name}
+                onClick={() => handleAddTemplate(t)}
+                className="text-left p-3 bg-white rounded-lg border border-primary-200 hover:border-primary-400 transition-colors"
+              >
+                <div className="text-sm font-medium text-gray-900">{t.name}</div>
+                <div className="text-xs text-gray-500 mt-0.5">{t.target} · {t.difficulty}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Solution cards grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {solutions.map((sol) => (
+          <div
+            key={sol.id}
+            className="bg-white rounded-lg border border-gray-200 p-5 relative group"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <GripVertical size={14} className="text-gray-300" />
+                <h3 className="font-semibold text-gray-900">{sol.name}</h3>
+              </div>
+              <button
+                onClick={() => handleRemove(sol.id!)}
+                className="text-gray-300 hover:text-danger-500 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              <span className={`px-2 py-0.5 text-xs font-medium rounded border ${difficultyColors[sol.difficulty]}`}>
+                {sol.difficulty}
+              </span>
+              <span className="px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                {sol.target}
+              </span>
+              {sol.assigned_phase && (
+                <span className="px-2 py-0.5 text-xs font-medium rounded bg-primary-100 text-primary-600">
+                  Phase {sol.assigned_phase}
+                </span>
+              )}
+            </div>
+
+            {sol.problem_solved && (
+              <p className="text-sm text-gray-600 mb-3">{sol.problem_solved}</p>
+            )}
+
+            {/* Status toggle */}
+            <div className="flex gap-1 mb-3">
+              {(['Planned', 'Prototyped', 'Tested'] as SolutionStatus[]).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => handleUpdateStatus(sol.id!, status)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
+                    sol.status === status
+                      ? statusColors[status]
+                      : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+
+            {/* Vibe coding notes (expandable) */}
+            {(sol.status === 'Prototyped' || sol.status === 'Tested') && (
+              <div className="border-t border-gray-100 pt-3">
+                <div className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
+                  <Wrench size={12} />
+                  Vibe Coding Notes
+                </div>
+                <textarea
+                  value={sol.vibe_coding_notes || ''}
+                  onChange={(e) => handleUpdateNotes(sol.id!, e.target.value)}
+                  rows={2}
+                  placeholder="What did you build? What worked?"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-primary-500 outline-none resize-none"
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Add custom solution */}
+      {showForm ? (
+        <div className="mt-4 bg-white rounded-lg border-2 border-primary-200 p-5">
+          <h3 className="font-semibold text-gray-900 mb-4">Add Custom Solution</h3>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Tool Name</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="e.g., Student Onboarding Bot"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Target</label>
+              <select
+                value={form.target}
+                onChange={(e) => setForm({ ...form, target: e.target.value as SolutionTarget })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none"
+              >
+                <option value="Students">Students</option>
+                <option value="Professors">Professors</option>
+                <option value="Administration">Administration</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Difficulty</label>
+              <select
+                value={form.difficulty}
+                onChange={(e) => setForm({ ...form, difficulty: e.target.value as DifficultyLevel })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none"
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Quick Win from Morning (optional)</label>
+              <input
+                type="text"
+                value={form.linked_quick_win}
+                onChange={(e) => setForm({ ...form, linked_quick_win: e.target.value })}
+                placeholder="Link to morning's roadmap"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none"
+              />
+            </div>
+          </div>
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Problem it Solves</label>
+            <textarea
+              value={form.problem_solved}
+              onChange={(e) => setForm({ ...form, problem_solved: e.target.value })}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none"
+              placeholder="What problem does this tool solve?"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleAdd} disabled={!form.name.trim()} className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors">
+              Add Solution
+            </button>
+            <button onClick={resetForm} className="px-4 py-2 text-gray-600 text-sm rounded-lg hover:bg-gray-100 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowForm(true)}
+          className="mt-4 flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 text-gray-500 text-sm font-medium rounded-lg hover:border-primary-400 hover:text-primary-600 transition-colors w-full justify-center"
+        >
+          <Plus size={16} />
+          Add Custom Solution
+        </button>
+      )}
+    </div>
+  );
+}
