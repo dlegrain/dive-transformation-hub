@@ -60,6 +60,7 @@ export const SUB_CRITERIA_LABELS: Record<(typeof SUB_CRITERIA)[number], string> 
 };
 
 export const MATURITY_LEVELS = [
+  { value: 0, label: "I don't know", color: '#9ca3af' },
   { value: 1, label: 'Beginner', color: '#ef4444' },
   { value: 2, label: 'In Progress', color: '#f59e0b' },
   { value: 3, label: 'Continuous Improvement', color: '#22c55e' },
@@ -70,6 +71,7 @@ export const MATURITY_LEVELS = [
 // ============================================================
 
 export const RESISTANCE_BEHAVIORS = [
+  { value: 'supportive', label: 'Supportive / Champion', description: 'Actively supports AI adoption, willing to lead by example', severity: 'none' },
   { value: 'pronounced_refusal', label: 'Pronounced Refusal', description: 'Open opposition, vocal rejection', severity: 'high' },
   { value: 'pronounced_opposing', label: 'Pronounced Opposing', description: 'Active argumentation, ideological pushback', severity: 'high' },
   { value: 'subtle_undermining', label: 'Subtle Undermining', description: 'Passive sabotage, quiet non-compliance', severity: 'critical' },

@@ -17,16 +17,20 @@ interface Props {
 export default function RadarChart({ dimensions }: Props) {
   const data = DIMENSIONS.map((dim) => {
     const scores = dimensions[dim.key];
-    const avg = (scores.tools + scores.data + scores.culture) / 3;
+    const known = [scores.tools, scores.data, scores.culture].filter((v) => v > 0) as number[];
+    const avg = known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : 0;
     return {
       dimension: dim.label,
       score: Math.round(avg * 10) / 10,
+      hasUnknowns: known.length < 3,
       fullMark: 3,
     };
   });
 
-  const overallScore =
-    data.reduce((sum, d) => sum + d.score, 0) / data.length;
+  const scoredData = data.filter((d) => d.score > 0 || !d.hasUnknowns);
+  const overallScore = scoredData.length > 0
+    ? scoredData.reduce((sum, d) => sum + d.score, 0) / scoredData.length
+    : 0;
 
   const getColor = (score: number) => {
     if (score < 1.5) return '#ef4444';

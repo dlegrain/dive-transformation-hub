@@ -3,9 +3,9 @@
 // ============================================================
 
 export interface DimensionAssessment {
-  tools: 1 | 2 | 3;
-  data: 1 | 2 | 3;
-  culture: 1 | 2 | 3;
+  tools: 0 | 1 | 2 | 3;
+  data: 0 | 1 | 2 | 3;
+  culture: 0 | 1 | 2 | 3;
 }
 
 export type DimensionKey =
@@ -33,7 +33,7 @@ export interface MaturityAssessment {
 
 export type StakeholderRole = 'Students' | 'Professors' | 'Administration' | 'Direction';
 export type Discipline = 'STEM' | 'Humanities' | 'Social Sciences' | 'Other';
-export type ResistanceBehavior = 'pronounced_refusal' | 'pronounced_opposing' | 'subtle_undermining' | 'subtle_avoiding';
+export type ResistanceBehavior = 'supportive' | 'pronounced_refusal' | 'pronounced_opposing' | 'subtle_undermining' | 'subtle_avoiding';
 export type AnxietyType = 'learning' | 'sociotechnical' | 'displacement' | 'ethical_engagement';
 export type MissingLever = 'relative_advantage' | 'compatibility' | 'low_complexity';
 

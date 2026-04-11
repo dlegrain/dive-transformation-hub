@@ -15,8 +15,12 @@ import type {
 function dimensionSummary(dimensions: Record<DimensionKey, DimensionAssessment>): string {
   return DIMENSIONS.map((dim) => {
     const d = dimensions[dim.key];
-    const avg = ((d.tools + d.data + d.culture) / 3).toFixed(1);
-    return `  - ${dim.label}: ${avg}/3 (Tools=${d.tools}, Data=${d.data}, Culture=${d.culture})`;
+    const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
+    const avg = known.length > 0 ? (known.reduce((a, b) => a + b, 0) / known.length).toFixed(1) : 'N/A';
+    const toolsLabel = d.tools === 0 ? "I don't know" : String(d.tools);
+    const dataLabel = d.data === 0 ? "I don't know" : String(d.data);
+    const cultureLabel = d.culture === 0 ? "I don't know" : String(d.culture);
+    return `  - ${dim.label}: ${avg}/3 (Tools=${toolsLabel}, Data=${dataLabel}, Culture=${cultureLabel})`;
   }).join('\n');
 }
 
@@ -141,7 +145,9 @@ export function detectAlerts(
   // Weak dimension with no corresponding task
   const weakDimensions = DIMENSIONS.filter((dim) => {
     const d = dimensions[dim.key];
-    return (d.tools + d.data + d.culture) / 3 < 1.5;
+    const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
+    if (known.length === 0) return false; // all unknown — can't assess
+    return known.reduce((a, b) => a + b, 0) / known.length < 1.5;
   });
   if (weakDimensions.length > 0 && tasks.length > 0) {
     weakDimensions.forEach((dim) => {

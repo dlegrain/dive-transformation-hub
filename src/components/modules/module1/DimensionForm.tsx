@@ -3,7 +3,7 @@ import type { DimensionKey, DimensionAssessment } from '../../../types';
 
 interface Props {
   dimensions: Record<DimensionKey, DimensionAssessment>;
-  onChange: (key: DimensionKey, sub: 'tools' | 'data' | 'culture', value: 1 | 2 | 3) => void;
+  onChange: (key: DimensionKey, sub: 'tools' | 'data' | 'culture', value: 0 | 1 | 2 | 3) => void;
 }
 
 export default function DimensionForm({ dimensions, onChange }: Props) {
@@ -11,7 +11,8 @@ export default function DimensionForm({ dimensions, onChange }: Props) {
     <div className="space-y-6">
       {DIMENSIONS.map((dim) => {
         const scores = dimensions[dim.key];
-        const avg = ((scores.tools + scores.data + scores.culture) / 3).toFixed(1);
+        const known = [scores.tools, scores.data, scores.culture].filter((v) => v > 0) as number[];
+        const avg = known.length > 0 ? (known.reduce((a, b) => a + b, 0) / known.length).toFixed(1) : '—';
 
         return (
           <div
@@ -26,16 +27,18 @@ export default function DimensionForm({ dimensions, onChange }: Props) {
               <div className="text-right">
                 <span
                   className={`text-lg font-bold ${
-                    Number(avg) < 1.5
-                      ? 'text-danger-600'
-                      : Number(avg) < 2.5
-                        ? 'text-warning-600'
-                        : 'text-accent-600'
+                    avg === '—'
+                      ? 'text-gray-400'
+                      : Number(avg) < 1.5
+                        ? 'text-danger-600'
+                        : Number(avg) < 2.5
+                          ? 'text-warning-600'
+                          : 'text-accent-600'
                   }`}
                 >
                   {avg}
                 </span>
-                <span className="text-xs text-gray-400"> / 3</span>
+                {avg !== '—' && <span className="text-xs text-gray-400"> / 3</span>}
               </div>
             </div>
 
@@ -49,8 +52,8 @@ export default function DimensionForm({ dimensions, onChange }: Props) {
                     {MATURITY_LEVELS.map((level) => (
                       <button
                         key={level.value}
-                        onClick={() => onChange(dim.key, sub, level.value as 1 | 2 | 3)}
-                        className={`flex-1 py-1.5 px-2 text-xs rounded font-medium transition-all ${
+                        onClick={() => onChange(dim.key, sub, level.value as 0 | 1 | 2 | 3)}
+                        className={`flex-1 py-1.5 px-1 text-xs rounded font-medium transition-all ${
                           scores[sub] === level.value
                             ? 'text-white shadow-sm'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -62,7 +65,7 @@ export default function DimensionForm({ dimensions, onChange }: Props) {
                         }
                         title={level.label}
                       >
-                        {level.value}
+                        {level.value === 0 ? '?' : level.value}
                       </button>
                     ))}
                   </div>

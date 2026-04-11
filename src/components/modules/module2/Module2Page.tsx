@@ -85,7 +85,11 @@ export default function Module2Page() {
 
             {/* Triple diagnostic tags */}
             <div className="flex flex-wrap gap-2 mb-3">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-danger-50 text-danger-700 border border-danger-200">
+              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                s.behavior === 'supportive'
+                  ? 'bg-accent-50 text-accent-700 border-accent-200'
+                  : 'bg-danger-50 text-danger-700 border-danger-200'
+              }`}>
                 {RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-warning-50 text-warning-700 border border-warning-200">
@@ -99,18 +103,18 @@ export default function Module2Page() {
             {/* Counter-measure */}
             {s.generated_counter_measure && (
               <div className={`p-4 rounded-lg text-sm leading-relaxed ${
-                s.anxiety === 'ethical_engagement'
+                s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
                   ? 'bg-accent-50 border border-accent-200'
                   : 'bg-primary-50 border border-primary-200'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
-                  {s.anxiety === 'ethical_engagement' ? (
+                  {s.behavior === 'supportive' || s.anxiety === 'ethical_engagement' ? (
                     <Shield size={16} className="text-accent-600" />
                   ) : (
                     <AlertTriangle size={16} className="text-primary-600" />
                   )}
                   <span className="font-semibold text-xs uppercase tracking-wider text-gray-600">
-                    {s.anxiety === 'ethical_engagement' ? 'Opportunity' : 'Recommended Counter-Measure'}
+                    {s.behavior === 'supportive' ? 'Leverage Strategy' : s.anxiety === 'ethical_engagement' ? 'Opportunity' : 'Recommended Counter-Measure'}
                   </span>
                 </div>
                 {s.generated_counter_measure.split('\n\n').map((paragraph, i) => (
@@ -178,7 +182,9 @@ export default function Module2Page() {
                     onClick={() => setForm({ ...form, behavior: b.value as ResistanceBehavior })}
                     className={`text-left p-3 rounded-lg border text-sm transition-all ${
                       form.behavior === b.value
-                        ? 'border-danger-400 bg-danger-50'
+                        ? b.value === 'supportive'
+                          ? 'border-accent-400 bg-accent-50'
+                          : 'border-danger-400 bg-danger-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >

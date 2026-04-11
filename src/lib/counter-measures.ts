@@ -11,6 +11,19 @@ interface CounterMeasureInput {
 export function generateCounterMeasure(input: CounterMeasureInput): string {
   const parts: string[] = [];
 
+  // Special case: supportive stakeholder — leverage them
+  if (input.behavior === 'supportive') {
+    return (
+      'This stakeholder is an active supporter — a valuable asset for your transformation. ' +
+      'Leverage their enthusiasm: involve them as an early adopter, gather their success stories, ' +
+      'and use their experience to inspire peers. ' +
+      (input.role === 'Professors'
+        ? 'However, remember that professors influence peers through private demonstration, not public advocacy (Singh & Strzelecki, 2026). '
+        : 'Social influence and peer success stories are powerful adoption drivers (Bui et al., 2025). ') +
+      'Consider assigning them as a champion in your 90-day plan (Module 4).'
+    );
+  }
+
   // Special case: ethical engagement is an ASSET, not a problem
   if (input.anxiety === 'ethical_engagement') {
     return (
