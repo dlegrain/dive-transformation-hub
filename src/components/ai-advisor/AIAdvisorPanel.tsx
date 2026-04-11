@@ -78,19 +78,29 @@ export default function AIAdvisorPanel() {
         content: m.content,
       }));
 
-      // Call Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('ai-advisor', {
-        body: {
-          systemPrompt,
-          messages: conversationMessages,
-        },
-      });
+      // Call AI endpoint (dev proxy or Supabase Edge Function)
+      let responseData: { content?: string };
 
-      if (error) throw error;
+      const devProxy = import.meta.env.DEV ? 'http://localhost:3001' : null;
+      if (devProxy) {
+        const resp = await fetch(`${devProxy}/functions/v1/ai-advisor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ systemPrompt, messages: conversationMessages }),
+        });
+        if (!resp.ok) throw new Error(`Proxy error: ${resp.status}`);
+        responseData = await resp.json();
+      } else {
+        const { data, error } = await supabase.functions.invoke('ai-advisor', {
+          body: { systemPrompt, messages: conversationMessages },
+        });
+        if (error) throw error;
+        responseData = data;
+      }
 
       const assistantMessage: AIMessage = {
         role: 'assistant',
-        content: data?.content || 'I apologize, I could not generate a response. Please try again.',
+        content: responseData?.content || 'I apologize, I could not generate a response. Please try again.',
         timestamp: new Date().toISOString(),
       };
 
