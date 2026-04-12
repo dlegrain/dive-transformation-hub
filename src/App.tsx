@@ -9,6 +9,7 @@ import Module3Page from './components/modules/module3/Module3Page';
 import Module4Page from './components/modules/module4/Module4Page';
 import ExportPage from './components/export/ExportPage';
 import DocsPage from './components/docs/DocsPage';
+import PlenaryDashboard from './components/plenary/PlenaryDashboard';
 
 function ProtectedRoutes() {
   const { participant, isLoading } = useAuth();
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="/module4" element={<Module4Page />} />
               <Route path="/export" element={<ExportPage />} />
               <Route path="/docs" element={<DocsPage />} />
+              <Route path="/plenary" element={<PlenaryDashboard />} />
             </Route>
           </Routes>
         </BrowserRouter>

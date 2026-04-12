@@ -1,8 +1,10 @@
-import { Zap, RotateCcw, Shield } from 'lucide-react';
+import { Zap, RotateCcw, Shield, BarChart3 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../lib/store';
 
 export default function AdminBar() {
   const { fillSampleData, resetAll } = useStore();
+  const navigate = useNavigate();
 
   return (
     <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-4">
@@ -11,6 +13,13 @@ export default function AdminBar() {
         Admin
       </div>
       <div className="flex gap-2">
+        <button
+          onClick={() => navigate('/plenary')}
+          className="flex items-center gap-1.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded transition-colors"
+        >
+          <BarChart3 size={12} />
+          Plenary Dashboard
+        </button>
         <button
           onClick={fillSampleData}
           className="flex items-center gap-1.5 px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded transition-colors"
