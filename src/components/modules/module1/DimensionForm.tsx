@@ -1,15 +1,20 @@
+import { EyeOff } from 'lucide-react';
 import { DIMENSIONS, SUB_CRITERIA, SUB_CRITERIA_LABELS, MATURITY_LEVELS } from '../../../lib/constants';
 import type { DimensionKey, DimensionAssessment } from '../../../types';
 
 interface Props {
   dimensions: Record<DimensionKey, DimensionAssessment>;
   onChange: (key: DimensionKey, sub: 'tools' | 'data' | 'culture', value: 0 | 1 | 2 | 3) => void;
+  hiddenDimensions: DimensionKey[];
+  onToggleDimension: (key: DimensionKey) => void;
 }
 
-export default function DimensionForm({ dimensions, onChange }: Props) {
+export default function DimensionForm({ dimensions, onChange, hiddenDimensions, onToggleDimension }: Props) {
+  const visibleDimensions = DIMENSIONS.filter((d) => !hiddenDimensions.includes(d.key));
+
   return (
     <div className="space-y-6">
-      {DIMENSIONS.map((dim) => {
+      {visibleDimensions.map((dim) => {
         const scores = dimensions[dim.key];
         const known = [scores.tools, scores.data, scores.culture].filter((v) => v > 0) as number[];
         const avg = known.length > 0 ? (known.reduce((a, b) => a + b, 0) / known.length).toFixed(1) : '—';
@@ -24,21 +29,30 @@ export default function DimensionForm({ dimensions, onChange }: Props) {
                 <h3 className="font-semibold text-gray-900">{dim.label}</h3>
                 <p className="text-xs text-gray-500 mt-0.5">{dim.description}</p>
               </div>
-              <div className="text-right">
-                <span
-                  className={`text-lg font-bold ${
-                    avg === '—'
-                      ? 'text-gray-400'
-                      : Number(avg) < 1.5
-                        ? 'text-danger-600'
-                        : Number(avg) < 2.5
-                          ? 'text-warning-600'
-                          : 'text-accent-600'
-                  }`}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => onToggleDimension(dim.key)}
+                  className="text-gray-300 hover:text-gray-500 p-1 transition-colors"
+                  title={`Hide "${dim.label}" from your radar`}
                 >
-                  {avg}
-                </span>
-                {avg !== '—' && <span className="text-xs text-gray-400"> / 3</span>}
+                  <EyeOff size={14} />
+                </button>
+                <div className="text-right">
+                  <span
+                    className={`text-lg font-bold ${
+                      avg === '—'
+                        ? 'text-gray-400'
+                        : Number(avg) < 1.5
+                          ? 'text-danger-600'
+                          : Number(avg) < 2.5
+                            ? 'text-warning-600'
+                            : 'text-accent-600'
+                    }`}
+                  >
+                    {avg}
+                  </span>
+                  {avg !== '—' && <span className="text-xs text-gray-400"> / 3</span>}
+                </div>
               </div>
             </div>
 

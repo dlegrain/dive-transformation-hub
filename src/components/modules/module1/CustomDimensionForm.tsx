@@ -1,22 +1,17 @@
+import { Trash2 } from 'lucide-react';
 import { SUB_CRITERIA, SUB_CRITERIA_LABELS, MATURITY_LEVELS } from '../../../lib/constants';
 import type { CustomDimension } from '../../../types';
 
 interface Props {
   customDimension: CustomDimension;
-  onChange: React.Dispatch<React.SetStateAction<CustomDimension | null>>;
+  onUpdate: (updated: CustomDimension) => void;
+  onRemove: () => void;
 }
 
-export default function CustomDimensionForm({ customDimension, onChange }: Props) {
+export default function CustomDimensionForm({ customDimension, onUpdate, onRemove }: Props) {
   const scores = customDimension.assessment;
   const known = [scores.tools, scores.data, scores.culture].filter((v) => v > 0) as number[];
   const avg = known.length > 0 ? (known.reduce((a, b) => a + b, 0) / known.length).toFixed(1) : '—';
-
-  const updateAssessment = (sub: 'tools' | 'data' | 'culture', value: 0 | 1 | 2 | 3) => {
-    onChange((prev) => prev ? {
-      ...prev,
-      assessment: { ...prev.assessment, [sub]: value },
-    } : prev);
-  };
 
   return (
     <div className="bg-white rounded-lg border-2 border-primary-200 p-5">
@@ -26,7 +21,7 @@ export default function CustomDimensionForm({ customDimension, onChange }: Props
           <input
             type="text"
             value={customDimension.label}
-            onChange={(e) => onChange((prev) => prev ? { ...prev, label: e.target.value } : prev)}
+            onChange={(e) => onUpdate({ ...customDimension, label: e.target.value })}
             placeholder="e.g., Student Wellbeing, AI Readiness..."
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
           />
@@ -36,7 +31,7 @@ export default function CustomDimensionForm({ customDimension, onChange }: Props
           <input
             type="text"
             value={customDimension.description}
-            onChange={(e) => onChange((prev) => prev ? { ...prev, description: e.target.value } : prev)}
+            onChange={(e) => onUpdate({ ...customDimension, description: e.target.value })}
             placeholder="What does this dimension cover?"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
           />
@@ -48,21 +43,30 @@ export default function CustomDimensionForm({ customDimension, onChange }: Props
           <h3 className="font-semibold text-gray-900">{customDimension.label || 'Custom Dimension'}</h3>
           <p className="text-xs text-gray-500 mt-0.5">{customDimension.description || 'Define your own dimension'}</p>
         </div>
-        <div className="text-right">
-          <span
-            className={`text-lg font-bold ${
-              avg === '—'
-                ? 'text-gray-400'
-                : Number(avg) < 1.5
-                  ? 'text-danger-600'
-                  : Number(avg) < 2.5
-                    ? 'text-warning-600'
-                    : 'text-accent-600'
-            }`}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onRemove}
+            className="text-gray-300 hover:text-danger-500 p-1 transition-colors"
+            title="Remove this custom dimension"
           >
-            {avg}
-          </span>
-          {avg !== '—' && <span className="text-xs text-gray-400"> / 3</span>}
+            <Trash2 size={14} />
+          </button>
+          <div className="text-right">
+            <span
+              className={`text-lg font-bold ${
+                avg === '—'
+                  ? 'text-gray-400'
+                  : Number(avg) < 1.5
+                    ? 'text-danger-600'
+                    : Number(avg) < 2.5
+                      ? 'text-warning-600'
+                      : 'text-accent-600'
+              }`}
+            >
+              {avg}
+            </span>
+            {avg !== '—' && <span className="text-xs text-gray-400"> / 3</span>}
+          </div>
         </div>
       </div>
 
@@ -76,7 +80,10 @@ export default function CustomDimensionForm({ customDimension, onChange }: Props
               {MATURITY_LEVELS.map((level) => (
                 <button
                   key={level.value}
-                  onClick={() => updateAssessment(sub, level.value as 0 | 1 | 2 | 3)}
+                  onClick={() => onUpdate({
+                    ...customDimension,
+                    assessment: { ...customDimension.assessment, [sub]: level.value },
+                  })}
                   className={`flex-1 py-1.5 px-1 text-xs rounded font-medium transition-all ${
                     scores[sub] === level.value
                       ? 'text-white shadow-sm'

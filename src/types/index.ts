@@ -45,6 +45,8 @@ export type Discipline = 'STEM' | 'Humanities' | 'Social Sciences' | 'Other';
 export type ResistanceBehavior = 'supportive' | 'pronounced_refusal' | 'pronounced_opposing' | 'subtle_undermining' | 'subtle_avoiding';
 export type AnxietyType = 'learning' | 'sociotechnical' | 'displacement' | 'ethical_engagement';
 export type MissingLever = 'relative_advantage' | 'compatibility' | 'low_complexity';
+export type PowerLevel = 'high' | 'low';
+export type InterestLevel = 'high' | 'low';
 
 export interface Stakeholder {
   id?: string;
@@ -52,6 +54,8 @@ export interface Stakeholder {
   name: string;
   role: StakeholderRole;
   discipline?: Discipline;
+  power?: PowerLevel;
+  interest?: InterestLevel;
   behavior: ResistanceBehavior;
   anxiety: AnxietyType;
   missing_lever: MissingLever;

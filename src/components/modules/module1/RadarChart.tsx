@@ -8,26 +8,52 @@ import {
   Tooltip,
 } from 'recharts';
 import { DIMENSIONS } from '../../../lib/constants';
-import type { DimensionKey, DimensionAssessment } from '../../../types';
+import type { DimensionKey, DimensionAssessment, CustomDimension } from '../../../types';
 
 interface Props {
   dimensions: Record<DimensionKey, DimensionAssessment>;
+  customDimensions?: CustomDimension[];
+  hiddenDimensions?: DimensionKey[];
 }
 
-export default function RadarChart({ dimensions }: Props) {
-  const data = DIMENSIONS.map((dim) => {
-    const scores = dimensions[dim.key];
-    const known = [scores.tools, scores.data, scores.culture].filter((v) => v > 0) as number[];
-    const avg = known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : null;
-    return {
-      dimension: dim.label,
-      score: avg !== null ? Math.round(avg * 10) / 10 : null,
-      hasUnknowns: known.length < 3,
-      fullMark: 3,
-    };
-  });
+function computeScore(assessment: DimensionAssessment) {
+  const known = [assessment.tools, assessment.data, assessment.culture].filter((v) => v > 0) as number[];
+  const avg = known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : null;
+  return {
+    score: avg !== null ? Math.round(avg * 10) / 10 : null,
+    hasUnknowns: known.length < 3,
+  };
+}
 
-  // For the radar chart: null → undefined so Recharts skips the point
+export default function RadarChart({ dimensions, customDimensions = [], hiddenDimensions = [] }: Props) {
+  // Standard dimensions (not hidden)
+  const standardData = DIMENSIONS
+    .filter((dim) => !hiddenDimensions.includes(dim.key))
+    .map((dim) => {
+      const { score, hasUnknowns } = computeScore(dimensions[dim.key]);
+      return {
+        dimension: dim.label,
+        score,
+        hasUnknowns,
+        fullMark: 3,
+      };
+    });
+
+  // Custom dimensions (only those with a label)
+  const customData = customDimensions
+    .filter((cd) => cd.label.trim())
+    .map((cd) => {
+      const { score, hasUnknowns } = computeScore(cd.assessment);
+      return {
+        dimension: cd.label,
+        score,
+        hasUnknowns,
+        fullMark: 3,
+      };
+    });
+
+  const data = [...standardData, ...customData];
+
   const chartData = data.map((d) => ({
     ...d,
     score: d.score ?? undefined,
@@ -56,7 +82,7 @@ export default function RadarChart({ dimensions }: Props) {
             {overallScore.toFixed(1)}
           </span>
           <span className="text-sm text-gray-400"> / 3.0</span>
-          <p className="text-xs text-gray-500">Overall Score</p>
+          <p className="text-xs text-gray-500">Overall Score ({data.length} dimensions)</p>
         </div>
       </div>
 
@@ -65,7 +91,7 @@ export default function RadarChart({ dimensions }: Props) {
           <PolarGrid stroke="#e5e7eb" />
           <PolarAngleAxis
             dataKey="dimension"
-            tick={{ fontSize: 11, fill: '#6b7280' }}
+            tick={{ fontSize: data.length > 8 ? 9 : 11, fill: '#6b7280' }}
           />
           <PolarRadiusAxis
             angle={90}

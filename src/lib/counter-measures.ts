@@ -1,8 +1,10 @@
-import type { ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline } from '../types';
+import type { ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline, PowerLevel, InterestLevel } from '../types';
 
 interface CounterMeasureInput {
   role: StakeholderRole;
   discipline?: Discipline;
+  power?: PowerLevel;
+  interest?: InterestLevel;
   behavior: ResistanceBehavior;
   anxiety: AnxietyType;
   missingLever: MissingLever;
@@ -121,6 +123,27 @@ export function generateCounterMeasure(input: CounterMeasureInput): string {
         'Action: reduce all friction — no installation, no complex login, one-click access, guided tutorials. The tool must feel effortless from the first interaction (Singh & Strzelecki, 2026).'
       );
       break;
+  }
+
+  // Power/Interest priority framing
+  if (input.power && input.interest) {
+    if (input.power === 'high' && input.interest === 'high') {
+      parts.push(
+        'Priority: KEY PLAYER — this stakeholder has both the power to block your initiative and a strong personal stake. They require your most intense engagement. Schedule direct meetings, involve them in design decisions, and address their concerns first.'
+      );
+    } else if (input.power === 'high' && input.interest === 'low') {
+      parts.push(
+        'Priority: KEEP SATISFIED — this stakeholder can block your plans but is currently disengaged. This is dangerous: if they turn hostile later, they have the power to shut things down. Keep them informed and avoid surprises. Minimal demands, maximum courtesy.'
+      );
+    } else if (input.power === 'low' && input.interest === 'high') {
+      parts.push(
+        'Priority: KEEP INFORMED — this stakeholder is enthusiastic but lacks formal authority. They make excellent early adopters, pilot participants, and internal advocates. Leverage their energy without overburdening them.'
+      );
+    } else {
+      parts.push(
+        'Priority: MONITOR — low power, low interest. Don\'t invest significant effort here. A brief update is sufficient. Focus your energy on stakeholders who can move the needle.'
+      );
+    }
   }
 
   // Workload reminder (from Deacon)

@@ -94,6 +94,16 @@ export const MISSING_LEVERS = [
 export const STAKEHOLDER_ROLES = ['Students', 'Professors', 'Administration', 'Direction'] as const;
 export const DISCIPLINES = ['STEM', 'Humanities', 'Social Sciences', 'Other'] as const;
 
+export const POWER_LEVELS = [
+  { value: 'high', label: 'High Power', description: 'Can make or block decisions (rector, dean, ministry)' },
+  { value: 'low', label: 'Low Power', description: 'Limited formal authority (junior faculty, students, staff)' },
+] as const;
+
+export const INTEREST_LEVELS = [
+  { value: 'high', label: 'High Interest', description: 'Directly affected by or invested in the change' },
+  { value: 'low', label: 'Low Interest', description: 'Indifferent or unaware of the initiative' },
+] as const;
+
 // ============================================================
 // Module 3: Solution templates
 // ============================================================

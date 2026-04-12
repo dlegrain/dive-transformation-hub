@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Plus, Trash2, AlertTriangle, Shield } from 'lucide-react';
-import { RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, STAKEHOLDER_ROLES, DISCIPLINES } from '../../../lib/constants';
+import { RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, STAKEHOLDER_ROLES, DISCIPLINES, POWER_LEVELS, INTEREST_LEVELS } from '../../../lib/constants';
 import { generateCounterMeasure } from '../../../lib/counter-measures';
 import { useStore } from '../../../lib/store';
-import type { ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline } from '../../../types';
+import type { ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline, PowerLevel, InterestLevel } from '../../../types';
 
 export default function Module2Page() {
   const { stakeholders, setStakeholders } = useStore();
@@ -13,6 +13,8 @@ export default function Module2Page() {
     name: '',
     role: 'Professors' as StakeholderRole,
     discipline: 'Other' as Discipline,
+    power: 'low' as PowerLevel,
+    interest: 'high' as InterestLevel,
     behavior: 'subtle_avoiding' as ResistanceBehavior,
     anxiety: 'learning' as AnxietyType,
     missing_lever: 'relative_advantage' as MissingLever,
@@ -23,6 +25,8 @@ export default function Module2Page() {
     const counterMeasure = generateCounterMeasure({
       role: form.role,
       discipline: form.discipline,
+      power: form.power,
+      interest: form.interest,
       behavior: form.behavior,
       anxiety: form.anxiety,
       missingLever: form.missing_lever,
@@ -37,7 +41,7 @@ export default function Module2Page() {
         generated_counter_measure: counterMeasure,
       },
     ]);
-    setForm({ name: '', role: 'Professors', discipline: 'Other', behavior: 'subtle_avoiding', anxiety: 'learning', missing_lever: 'relative_advantage', notes: '' });
+    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: 'subtle_avoiding', anxiety: 'learning', missing_lever: 'relative_advantage', notes: '' });
     setShowForm(false);
   };
 
@@ -71,9 +75,24 @@ export default function Module2Page() {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="font-semibold text-gray-900">{s.name}</h3>
-                <p className="text-sm text-gray-500">
-                  {s.role} {s.discipline && s.discipline !== 'Other' ? `(${s.discipline})` : ''}
-                </p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-sm text-gray-500">
+                    {s.role} {s.discipline && s.discipline !== 'Other' ? `(${s.discipline})` : ''}
+                  </span>
+                  {s.power && s.interest && (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                      s.power === 'high' && s.interest === 'high'
+                        ? 'bg-danger-100 text-danger-700'
+                        : s.power === 'high' && s.interest === 'low'
+                          ? 'bg-warning-100 text-warning-700'
+                          : s.power === 'low' && s.interest === 'high'
+                            ? 'bg-primary-100 text-primary-700'
+                            : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {s.power === 'high' ? 'Hi' : 'Lo'} Power / {s.interest === 'high' ? 'Hi' : 'Lo'} Interest
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => handleRemove(s.id!)}
@@ -167,6 +186,57 @@ export default function Module2Page() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Power / Interest matrix */}
+          <div className="mb-4">
+            <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">
+              Power / Interest (from this morning's stakeholder map)
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-1">Power — can they make or block decisions?</label>
+                <div className="flex gap-2">
+                  {POWER_LEVELS.map((p) => (
+                    <button
+                      key={p.value}
+                      onClick={() => setForm({ ...form, power: p.value as PowerLevel })}
+                      className={`flex-1 p-2 rounded-lg border text-sm transition-all ${
+                        form.power === p.value
+                          ? 'border-primary-400 bg-primary-50 font-medium'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-1">Interest — how affected are they?</label>
+                <div className="flex gap-2">
+                  {INTEREST_LEVELS.map((i) => (
+                    <button
+                      key={i.value}
+                      onClick={() => setForm({ ...form, interest: i.value as InterestLevel })}
+                      className={`flex-1 p-2 rounded-lg border text-sm transition-all ${
+                        form.interest === i.value
+                          ? 'border-primary-400 bg-primary-50 font-medium'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {i.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1.5 italic">
+              {form.power === 'high' && form.interest === 'high' && 'Key Player — manage closely, highest priority'}
+              {form.power === 'high' && form.interest === 'low' && 'Keep Satisfied — powerful but disengaged, don\'t let them become hostile'}
+              {form.power === 'low' && form.interest === 'high' && 'Keep Informed — enthusiastic allies, potential champions'}
+              {form.power === 'low' && form.interest === 'low' && 'Monitor — minimal effort needed'}
+            </p>
           </div>
 
           {/* Triple diagnostic */}
