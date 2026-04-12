@@ -69,6 +69,21 @@ Quick reference for the facilitator: which articles power which module, and what
 - **Critical insight for professors**: do NOT use social pressure or public demos — they evaluate tools **in private**
 - Strategy: offer **risk-free solo experimentation** and demonstrate immediate time savings on their specific tasks
 
+### Verano-Tacoronte, D. et al. (2025)
+**Are university teachers ready for generative artificial intelligence? Unpacking faculty anxiety in the ChatGPT era**
+*Education and Information Technologies (Springer)* | [Full text](https://doi.org/10.1007/s10639-025-13585-7)
+
+- Study of faculty in **Spanish public universities** with stable employment
+- **Key nuance vs. Cao et al.**: when job security is not a concern, displacement anxiety does **NOT** block adoption
+- The **real barriers** are ethical and pedagogical:
+  - Fear of **misusing the tool** (integrity loss, errors)
+  - Fear of **negative impact on students** (plagiarism, reduced effort, over-reliance)
+- **Gender matters**: female faculty show lower adoption intention — design targeted mentoring programs
+- **Age and experience have no impact** — don't assume older = more resistant
+- Training must go beyond technical skills → focus on **ethical use frameworks** and **student AI conduct codes**
+- **Even non-adopting faculty must be trained** so they understand how their students use AI
+- Complements Cao et al.: use Cao's framework for private institutions (displacement anxiety), Verano-Tacoronte's for public institutions (ethical anxiety)
+
 ---
 
 ## Module 3 — Solutions Arsenal (Day 3)
@@ -113,6 +128,11 @@ Indirectly informed by:
 ### Hong, T. T. M. et al. (2026) *(also used in Module 2)*
 - Module 4 uses this for **faculty training recommendations**: formal frameworks are necessary to prevent unethical peer mimicry
 
+### Verano-Tacoronte et al. (2025) *(also used in Module 2)*
+- Module 4 Phase 2 training programs must include **ethical use and student conduct codes**, not just technical skills
+- **Even non-adopters need training** — they must understand how students use AI
+- Consider **gender-targeted mentoring** to ensure equitable adoption
+
 ---
 
 ## Cross-cutting (Context)
@@ -140,3 +160,4 @@ Indirectly informed by:
 | Nguyen & Hong | (Nguyen & Hong, 2025) | 4 | 3-layer deployment model |
 | Nguyen & Uong | (Nguyen & Uong, 2026) | Context | Vietnamese HE empirical data |
 | Singh & Strzelecki | (Singh & Strzelecki, 2026) | 2, 4 | 3 diffusion levers for professors |
+| Verano-Tacoronte et al. | (Verano-Tacoronte et al., 2025) | 2, 4 | Ethical/pedagogical anxiety as real blockers in public HE |

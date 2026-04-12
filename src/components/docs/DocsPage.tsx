@@ -105,6 +105,19 @@ const articles = [
     summary:
       'Study of 640 academics across 10 universities. Identifies 3 adoption levers: relative advantage, compatibility, and low complexity. Key insight: professors evaluate tools privately — do NOT use social pressure or public demos. Offer risk-free solo experimentation and demonstrate immediate time savings on THEIR tasks.',
   },
+  {
+    id: 9,
+    authors: 'Verano-Tacoronte, D. et al.',
+    year: 2025,
+    title: 'Are university teachers ready for generative artificial intelligence? Unpacking faculty anxiety in the ChatGPT era',
+    journal: 'Education and Information Technologies (Springer)',
+    url: 'https://doi.org/10.1007/s10639-025-13585-7',
+    modules: [2, 4],
+    region: 'Europe',
+    sample: 'Spain — faculty from public universities',
+    summary:
+      'In public universities with stable employment, job displacement anxiety does NOT block adoption. The real barriers are ethical/pedagogical: fear of misuse (integrity loss) and fear of negative impact on student learning (plagiarism, reduced effort). Training must focus on ethical use and student conduct codes. Gender matters: female faculty show lower adoption intention — design targeted mentoring. Even non-adopting faculty must be trained to understand how students use AI.',
+  },
 ];
 
 const moduleConfig: Record<number, { label: string; color: string; icon: React.ElementType }> = {
@@ -123,7 +136,7 @@ export default function DocsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Research Articles</h1>
         </div>
         <p className="text-gray-500 text-sm">
-          The 8 peer-reviewed studies (2025-2026) that power every recommendation, diagnostic, and counter-measure in this app.
+          The 9 peer-reviewed studies (2025-2026) that power every recommendation, diagnostic, and counter-measure in this app.
           Click any article to read the full text.
         </p>
       </div>
@@ -135,13 +148,13 @@ export default function DocsPage() {
           <h2 className="text-sm font-semibold text-gray-900">Geographic Coverage</h2>
         </div>
         <p className="text-xs text-gray-500 mb-4">
-          These studies span 4 regions — universal frameworks from Latin America and Europe, applied to a Vietnamese context documented by 4 local studies.
+          These 9 studies span 4 regions — universal frameworks from Latin America and Europe, applied to a Vietnamese context documented by 4 local studies.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { region: 'Vietnam', count: 4, color: 'bg-red-50 border-red-200 text-red-700', detail: 'HCMC, Hanoi, national policy' },
             { region: 'Latin America', count: 1, color: 'bg-amber-50 border-amber-200 text-amber-700', detail: 'Peru — MTM maturity model' },
-            { region: 'Europe', count: 2, color: 'bg-blue-50 border-blue-200 text-blue-700', detail: 'Germany, Poland (8+ universities)' },
+            { region: 'Europe', count: 3, color: 'bg-blue-50 border-blue-200 text-blue-700', detail: 'Germany, Poland, Spain' },
             { region: 'China', count: 1, color: 'bg-emerald-50 border-emerald-200 text-emerald-700', detail: 'Sichuan — AI anxiety study' },
           ].map((r) => (
             <div key={r.region} className={`rounded-lg border p-3 ${r.color}`}>

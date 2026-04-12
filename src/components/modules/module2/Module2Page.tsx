@@ -60,7 +60,7 @@ export default function Module2Page() {
           Map your stakeholders through a triple diagnostic: how they resist, why, and what lever is missing.
         </p>
         <p className="text-xs text-gray-400 mt-2 italic">
-          Based on Deacon et al. (2025), Cao et al. (2026), Singh & Strzelecki (2026)
+          Based on Deacon et al. (2025), Cao et al. (2026), Singh & Strzelecki (2026), Verano-Tacoronte et al. (2025)
         </p>
       </div>
 

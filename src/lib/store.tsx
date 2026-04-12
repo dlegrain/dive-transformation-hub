@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type {
   DimensionKey,
   DimensionAssessment,
+  CustomDimension,
   Stakeholder,
   SolutionCard,
   PlanTask,
@@ -38,6 +39,8 @@ interface PersistedState {
   institutionName: string;
   assessorName: string;
   dimensions: Record<DimensionKey, DimensionAssessment>;
+  customDimensions: CustomDimension[];
+  hiddenDimensions: DimensionKey[];
   stakeholders: Stakeholder[];
   solutions: SolutionCard[];
   tasks: PlanTask[];
@@ -69,6 +72,10 @@ interface AppStore {
   setAssessorName: (v: string) => void;
   dimensions: Record<DimensionKey, DimensionAssessment>;
   setDimension: (key: DimensionKey, sub: 'tools' | 'data' | 'culture', value: 0 | 1 | 2 | 3) => void;
+  customDimensions: CustomDimension[];
+  setCustomDimensions: React.Dispatch<React.SetStateAction<CustomDimension[]>>;
+  hiddenDimensions: DimensionKey[];
+  setHiddenDimensions: React.Dispatch<React.SetStateAction<DimensionKey[]>>;
 
   // Module 2
   stakeholders: Stakeholder[];
@@ -101,6 +108,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [institutionName, setInstitutionName] = useState(saved.institutionName || '');
   const [assessorName, setAssessorName] = useState(saved.assessorName || '');
   const [dimensions, setDimensions] = useState(saved.dimensions || defaultDimensions);
+  const [customDimensions, setCustomDimensions] = useState<CustomDimension[]>(saved.customDimensions || []);
+  const [hiddenDimensions, setHiddenDimensions] = useState<DimensionKey[]>(saved.hiddenDimensions || []);
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(saved.stakeholders || []);
   const [solutions, setSolutions] = useState<SolutionCard[]>(saved.solutions || []);
   const [tasks, setTasks] = useState<PlanTask[]>(saved.tasks || []);
@@ -135,6 +144,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setInstitutionName('');
     setAssessorName('');
     setDimensions(defaultDimensions);
+    setCustomDimensions([]);
+    setHiddenDimensions([]);
     setStakeholders([]);
     setSolutions([]);
     setTasks([]);
@@ -144,8 +155,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Persist to localStorage on every state change
   const persist = useCallback(() => {
-    saveToStorage({ institutionName, assessorName, dimensions, stakeholders, solutions, tasks, kpis, aiMessages });
-  }, [institutionName, assessorName, dimensions, stakeholders, solutions, tasks, kpis, aiMessages]);
+    saveToStorage({ institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages });
+  }, [institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages]);
 
   useEffect(() => {
     persist();
@@ -157,6 +168,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         institutionName, setInstitutionName,
         assessorName, setAssessorName,
         dimensions, setDimension,
+        customDimension, setCustomDimension,
         stakeholders, setStakeholders,
         solutions, setSolutions,
         tasks, setTasks,

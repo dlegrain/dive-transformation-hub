@@ -18,11 +18,20 @@ export type DimensionKey =
   | 'institutionalImage'
   | 'universityExtension';
 
+export interface CustomDimension {
+  id: string;
+  label: string;
+  description: string;
+  assessment: DimensionAssessment;
+}
+
 export interface MaturityAssessment {
   id?: string;
   group_id: string;
   participant_id?: string;
   dimensions: Record<DimensionKey, DimensionAssessment>;
+  customDimensions?: CustomDimension[];
+  hiddenDimensions?: DimensionKey[];
   created_at?: string;
   updated_at?: string;
 }

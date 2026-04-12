@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import { MessageSquare, X, Send, AlertTriangle, Info, AlertOctagon, Loader2 } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { buildSystemPrompt, detectAlerts, type ProactiveAlert } from '../../lib/ai-advisor';
@@ -207,7 +208,7 @@ export default function AIAdvisorPanel() {
                   Ask me anything about your adoption plan.
                 </p>
                 <p className="text-xs text-gray-400">
-                  I have access to all your module data and 8 research articles.
+                  I have access to all your module data and 9 research articles.
                 </p>
                 <div className="mt-4 space-y-1.5">
                   {[
@@ -241,11 +242,17 @@ export default function AIAdvisorPanel() {
                       : 'bg-gray-100 text-gray-800 rounded-bl-sm'
                   }`}
                 >
-                  {msg.content.split('\n').map((line, j) => (
-                    <p key={j} className={j > 0 ? 'mt-2' : ''}>
-                      {line}
-                    </p>
-                  ))}
+                  {msg.role === 'assistant' ? (
+                    <div className="prose prose-sm prose-gray max-w-none [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ul]:my-1.5 [&>ul]:pl-4 [&>ol]:my-1.5 [&>ol]:pl-4 [&>li]:mb-1 [&>h1]:text-base [&>h2]:text-sm [&>h3]:text-sm [&>h1]:font-bold [&>h2]:font-semibold [&>h3]:font-semibold [&>h1]:mt-3 [&>h2]:mt-2.5 [&>h3]:mt-2 [&>h1]:mb-1 [&>h2]:mb-1 [&>h3]:mb-1 [&>blockquote]:border-l-2 [&>blockquote]:border-gray-300 [&>blockquote]:pl-3 [&>blockquote]:italic [&>blockquote]:text-gray-500">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.content.split('\n').map((line, j) => (
+                      <p key={j} className={j > 0 ? 'mt-2' : ''}>
+                        {line}
+                      </p>
+                    ))
+                  )}
                 </div>
               </div>
             ))}
