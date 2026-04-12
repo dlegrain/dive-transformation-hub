@@ -99,12 +99,12 @@ export const DISCIPLINES = ['STEM', 'Humanities', 'Social Sciences', 'Other'] as
 // ============================================================
 
 export const SOLUTION_TEMPLATES = [
-  { name: 'FAQ Chatbot', target: 'Students', difficulty: 'Low', problemSolved: 'AI-powered Q&A for common student inquiries' },
-  { name: 'Quiz Generator', target: 'Professors', difficulty: 'Low', problemSolved: 'Auto-generate quizzes from lecture content' },
-  { name: 'Writing Feedback Tool', target: 'Students', difficulty: 'Medium', problemSolved: 'AI writing assistant with plagiarism awareness' },
-  { name: 'Research Paper Summarizer', target: 'Professors', difficulty: 'Medium', problemSolved: 'Summarize and analyze research papers' },
-  { name: 'Enrollment Predictor', target: 'Administration', difficulty: 'High', problemSolved: 'Predict enrollment trends from historical data' },
-  { name: 'Curriculum Recommender', target: 'Professors', difficulty: 'High', problemSolved: 'AI-driven curriculum gap analysis' },
+  { name: 'Welcome Guide Chatbot', target: 'Students', difficulty: 'Low', problemSolved: 'Answer new students\' questions about campus, rules, and procedures — just upload the student handbook as context' },
+  { name: 'Study Buddy', target: 'Students', difficulty: 'Low', problemSolved: 'Help students revise a course by generating questions from the syllabus and providing explanations' },
+  { name: 'Syllabus Generator', target: 'Professors', difficulty: 'Low', problemSolved: 'Generate a structured syllabus (objectives, weekly plan, assessments) from a course description' },
+  { name: 'Rubric Builder', target: 'Professors', difficulty: 'Low', problemSolved: 'Generate detailed grading rubrics with criteria and levels from an assignment description' },
+  { name: 'Email Drafter', target: 'Administration', difficulty: 'Low', problemSolved: 'Draft official communications (announcements, invitations, notices) from bullet points' },
+  { name: 'Policy Q&A Bot', target: 'Administration', difficulty: 'Low', problemSolved: 'Answer staff and student questions about internal regulations — just upload the policy document as context' },
 ] as const;
 
 // ============================================================

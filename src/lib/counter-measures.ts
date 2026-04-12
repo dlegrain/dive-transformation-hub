@@ -20,7 +20,7 @@ export function generateCounterMeasure(input: CounterMeasureInput): string {
       (input.role === 'Professors'
         ? 'However, remember that professors influence peers through private demonstration, not public advocacy (Singh & Strzelecki, 2026). '
         : 'Social influence and peer success stories are powerful adoption drivers (Bui et al., 2025). ') +
-      'Consider assigning them as a champion in your 90-day plan (Module 4).'
+      'Consider assigning them as person in charge of an AI initiative in your 90-day plan (Module 4).'
     );
   }
 
@@ -79,7 +79,7 @@ export function generateCounterMeasure(input: CounterMeasureInput): string {
   // Role-specific modifier for professors
   if (input.role === 'Professors') {
     parts.push(
-      'Key insight for professors: do NOT rely on social pressure, public demonstrations, or the "champion" model. Academics evaluate tools privately and in isolation. Offer risk-free, individual experimentation with no audience (Singh & Strzelecki, 2026).'
+      'Key insight for professors: do NOT rely on social pressure, public demonstrations, or top-down mandates. Academics evaluate tools privately and in isolation. Offer risk-free, individual experimentation with no audience (Singh & Strzelecki, 2026).'
     );
   }
 

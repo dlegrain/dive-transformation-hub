@@ -18,18 +18,24 @@ export default function RadarChart({ dimensions }: Props) {
   const data = DIMENSIONS.map((dim) => {
     const scores = dimensions[dim.key];
     const known = [scores.tools, scores.data, scores.culture].filter((v) => v > 0) as number[];
-    const avg = known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : 0;
+    const avg = known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : null;
     return {
       dimension: dim.label,
-      score: Math.round(avg * 10) / 10,
+      score: avg !== null ? Math.round(avg * 10) / 10 : null,
       hasUnknowns: known.length < 3,
       fullMark: 3,
     };
   });
 
-  const scoredData = data.filter((d) => d.score > 0 || !d.hasUnknowns);
+  // For the radar chart: null → undefined so Recharts skips the point
+  const chartData = data.map((d) => ({
+    ...d,
+    score: d.score ?? undefined,
+  }));
+
+  const scoredData = data.filter((d) => d.score !== null);
   const overallScore = scoredData.length > 0
-    ? scoredData.reduce((sum, d) => sum + d.score, 0) / scoredData.length
+    ? scoredData.reduce((sum, d) => sum + d.score!, 0) / scoredData.length
     : 0;
 
   const getColor = (score: number) => {
@@ -55,7 +61,7 @@ export default function RadarChart({ dimensions }: Props) {
       </div>
 
       <ResponsiveContainer width="100%" height={400}>
-        <RechartsRadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
+        <RechartsRadarChart data={chartData} cx="50%" cy="50%" outerRadius="75%">
           <PolarGrid stroke="#e5e7eb" />
           <PolarAngleAxis
             dataKey="dimension"
@@ -86,15 +92,15 @@ export default function RadarChart({ dimensions }: Props) {
         </RechartsRadarChart>
       </ResponsiveContainer>
 
-      {/* Weakness alerts */}
+      {/* Weakness alerts — only for dimensions that have been rated */}
       {data
-        .filter((d) => d.score < 1.5)
+        .filter((d) => d.score !== null && d.score < 1.5)
         .map((d) => (
           <div
             key={d.dimension}
             className="mt-3 p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700"
           >
-            <strong>{d.dimension}</strong> is critically low ({d.score.toFixed(1)}).
+            <strong>{d.dimension}</strong> is critically low ({d.score!.toFixed(1)}).
             This dimension should be a priority in your 90-day plan (Module 4).
           </div>
         ))}

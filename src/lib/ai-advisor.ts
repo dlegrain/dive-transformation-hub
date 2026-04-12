@@ -49,7 +49,7 @@ function planSummary(tasks: PlanTask[], kpis: KPI[]): string {
     const phaseTasks = tasks.filter((t) => t.phase === phase.phase);
     parts.push(`  Phase ${phase.phase} (${phase.label}): ${phaseTasks.length} tasks`);
     phaseTasks.forEach((t) => {
-      parts.push(`    - ${t.name}${t.champion_name ? ' [Champion: ' + t.champion_name + ' → ' + t.champion_target + ']' : ''} (${t.status})`);
+      parts.push(`    - ${t.name}${t.champion_name ? ' [In charge: ' + t.champion_name + ' → ' + t.champion_target + ']' : ''} (${t.status})`);
     });
   }
   if (kpis.length > 0) {
@@ -116,7 +116,7 @@ RULES:
 - Be concise — max 3-4 paragraphs per response
 - Be actionable — every recommendation should be something they can do
 - Be specific to THEIR data — don't give generic advice
-- If you spot contradictions between modules (e.g., displacement anxiety in Module 2 but champion assigned to professors in Module 4), flag them proactively
+- If you spot contradictions between modules (e.g., displacement anxiety in Module 2 but a professor assigned as person in charge in Module 4), flag them proactively
 - Language: English only
 - Tone: professional but warm, like a knowledgeable colleague
 - Use bullet points for actionable items`;
@@ -160,16 +160,16 @@ export function detectAlerts(
     });
   }
 
-  // Champion conflict: professors with displacement anxiety
+  // Conflict: professors with displacement anxiety targeted in Module 4
   const profDisplacement = stakeholders.some(
     (s) => s.role === 'Professors' && s.anxiety === 'displacement'
   );
-  const profChampion = tasks.some((t) => t.champion_target === 'Professors');
-  if (profDisplacement && profChampion) {
+  const profTargeted = tasks.some((t) => t.champion_target === 'Professors');
+  if (profDisplacement && profTargeted) {
     alerts.push({
-      id: 'champion-conflict',
+      id: 'prof-target-conflict',
       message:
-        'Conflict: you identified displacement anxiety among professors (Module 2) but assigned a champion to professors (Module 4). This will likely backfire. Consider private pilot programs instead.',
+        'Conflict: you identified displacement anxiety among professors (Module 2) but assigned a professor-facing task with a person in charge (Module 4). A top-down approach will likely backfire. Consider private pilot programs instead.',
       severity: 'critical',
       module: 'module4',
     });

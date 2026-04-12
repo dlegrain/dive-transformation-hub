@@ -59,13 +59,13 @@ export default function Module4Page() {
     setKpis((prev) => prev.filter((k) => k.id !== id));
   };
 
-  const getChampionAlert = (target: SolutionTarget | undefined) => {
+  const getPersonInChargeAlert = (target: SolutionTarget | undefined) => {
     if (!target) return null;
     if (target === 'Professors') {
       return {
         type: 'danger' as const,
         message:
-          'Warning: Among academics, the "champion" model can backfire. Professors evaluate tools privately. ' +
+          'Warning: Among academics, a top-down approach can backfire. Professors evaluate tools privately. ' +
           'Offer risk-free, individual experimentation instead. No public demos, no peer pressure (Singh & Strzelecki, 2026; Cao et al., 2026).',
       };
     }
@@ -73,7 +73,7 @@ export default function Module4Page() {
       type: 'success' as const,
       message:
         `Excellent strategy: social influence and peer dynamics are massive adoption drivers for ${target.toLowerCase()}. ` +
-        `${target === 'Students' ? 'Student ambassadors create institutional momentum' : 'Administrative champions prove efficiency gains that are hard to argue against'} (Bui et al., 2025).`,
+        `${target === 'Students' ? 'Student ambassadors create institutional momentum' : 'Administrative leads prove efficiency gains that are hard to argue against'} (Bui et al., 2025).`,
     };
   };
 
@@ -99,7 +99,7 @@ export default function Module4Page() {
         </div>
         <h2 className="text-2xl font-bold text-gray-900">90-Day Adoption Plan</h2>
         <p className="text-gray-500 mt-1">
-          Build your action plan in 3 phases. Assign champions, track progress, define success metrics.
+          Build your action plan in 3 phases. Assign people in charge, track progress, define success metrics.
         </p>
         <p className="text-xs text-gray-400 mt-2 italic">
           Based on Lewin's model adapted by Nguyen & Hong (2025)
@@ -139,7 +139,7 @@ export default function Module4Page() {
               {/* Tasks */}
               <div className="p-3 space-y-2 min-h-[120px]">
                 {phaseTasks.map((task) => {
-                  const alert = getChampionAlert(task.champion_target);
+                  const alert = getPersonInChargeAlert(task.champion_target);
 
                   return (
                     <div key={task.id} className="border border-gray-200 rounded-lg p-3 group">
@@ -156,7 +156,7 @@ export default function Module4Page() {
                         </span>
                         {task.champion_name && (
                           <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-primary-50 text-primary-600">
-                            Champion: {task.champion_name}
+                            In charge: {task.champion_name}
                           </span>
                         )}
                       </div>
@@ -205,7 +205,7 @@ export default function Module4Page() {
                         type="text"
                         value={taskForm.champion_name}
                         onChange={(e) => setTaskForm({ ...taskForm, champion_name: e.target.value })}
-                        placeholder="Champion name"
+                        placeholder="Person in charge"
                         className="px-2 py-1.5 text-xs border border-gray-300 rounded outline-none"
                       />
                       <select

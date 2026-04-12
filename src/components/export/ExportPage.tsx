@@ -78,7 +78,7 @@ function generateRecommendations(store: ReturnType<typeof useStore>): string[] {
   const profStakeholders = store.stakeholders.filter((s) => s.role === 'Professors');
   if (profStakeholders.length > 0) {
     recs.push(
-      `For professors: avoid public demonstrations and the "champion" model. Academics evaluate tools privately. Offer risk-free, individual experimentation with immediate time savings on their specific tasks (Singh & Strzelecki, 2026).`
+      `For professors: avoid public demonstrations and top-down mandates. Academics evaluate tools privately. Offer risk-free, individual experimentation with immediate time savings on their specific tasks (Singh & Strzelecki, 2026).`
     );
   }
 
@@ -622,7 +622,7 @@ export default function ExportPage() {
                       <thead>
                         <tr>
                           <th style={styles.th}>Task</th>
-                          <th style={styles.th}>Champion</th>
+                          <th style={styles.th}>Person in Charge</th>
                           <th style={styles.th}>Priority</th>
                           <th style={styles.th}>Status</th>
                         </tr>

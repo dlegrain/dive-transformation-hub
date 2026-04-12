@@ -8,6 +8,13 @@ import type {
   KPI,
   AIMessage,
 } from '../types';
+import {
+  sampleDimensions,
+  sampleStakeholders,
+  sampleSolutions,
+  sampleTasks,
+  sampleKpis,
+} from './sample-data';
 
 // ============================================================
 // App-wide data store (shared across modules + AI Advisor)
@@ -80,6 +87,10 @@ interface AppStore {
   // AI Advisor
   aiMessages: Record<string, AIMessage[]>; // keyed by module
   addAIMessage: (module: string, message: AIMessage) => void;
+
+  // Admin
+  fillSampleData: () => void;
+  resetAll: () => void;
 }
 
 const StoreContext = createContext<AppStore | null>(null);
@@ -110,6 +121,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const fillSampleData = () => {
+    setInstitutionName('Saigon University');
+    setAssessorName('Dr. Nguyen Van A');
+    setDimensions(sampleDimensions);
+    setStakeholders(sampleStakeholders);
+    setSolutions(sampleSolutions);
+    setTasks(sampleTasks);
+    setKpis(sampleKpis);
+  };
+
+  const resetAll = () => {
+    setInstitutionName('');
+    setAssessorName('');
+    setDimensions(defaultDimensions);
+    setStakeholders([]);
+    setSolutions([]);
+    setTasks([]);
+    setKpis([]);
+    setAiMessages({});
+  };
+
   // Persist to localStorage on every state change
   const persist = useCallback(() => {
     saveToStorage({ institutionName, assessorName, dimensions, stakeholders, solutions, tasks, kpis, aiMessages });
@@ -130,6 +162,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         tasks, setTasks,
         kpis, setKpis,
         aiMessages, addAIMessage,
+        fillSampleData, resetAll,
       }}
     >
       {children}

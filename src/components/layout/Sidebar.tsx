@@ -1,11 +1,14 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Radar,
   Users,
   Lightbulb,
   CalendarCheck,
   FileDown,
+  BookOpen,
+  LogOut,
 } from 'lucide-react';
+import { useAuth } from '../../lib/auth-context';
 
 const modules = [
   {
@@ -35,6 +38,14 @@ const modules = [
 ];
 
 export default function Sidebar() {
+  const { participant, group, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/welcome', { replace: true });
+  };
+
   return (
     <aside className="w-64 bg-primary-950 text-white flex flex-col min-h-screen">
       {/* Logo / Title */}
@@ -66,6 +77,23 @@ export default function Sidebar() {
         ))}
       </nav>
 
+      {/* Docs link */}
+      <div className="px-2 pb-2">
+        <NavLink
+          to="/docs"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2.5 text-sm rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary-800 text-white'
+                : 'text-primary-400 hover:bg-primary-900 hover:text-white'
+            }`
+          }
+        >
+          <BookOpen size={16} />
+          Research Articles
+        </NavLink>
+      </div>
+
       {/* Export button */}
       <div className="p-4 border-t border-primary-800">
         <NavLink
@@ -77,11 +105,26 @@ export default function Sidebar() {
         </NavLink>
       </div>
 
-      {/* Footer */}
+      {/* Participant info + Sign out */}
       <div className="p-4 border-t border-primary-800">
-        <p className="text-xs text-primary-400 text-center">
-          DIVE Seminar 2026
-        </p>
+        {participant && (
+          <div className="mb-2">
+            <p className="text-xs font-medium text-primary-200 truncate">{participant.name}</p>
+            {group?.institution_name && (
+              <p className="text-xs text-primary-400 truncate">{group.institution_name}</p>
+            )}
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-primary-500">DIVE Seminar 2026</p>
+          <button
+            onClick={handleLogout}
+            className="text-primary-500 hover:text-primary-300 transition-colors"
+            title="Sign out"
+          >
+            <LogOut size={14} />
+          </button>
+        </div>
       </div>
     </aside>
   );

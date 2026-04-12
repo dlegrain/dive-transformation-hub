@@ -29,12 +29,14 @@ Participants create solution cards for the AI tools they want to build. The app 
 
 | Template | Target | Difficulty | Description |
 |----------|--------|-----------|-------------|
-| FAQ Chatbot | Students | Low | AI-powered Q&A for common student inquiries |
-| Quiz Generator | Professors | Low | Auto-generate quizzes from lecture content |
-| Writing Feedback Tool | Students | Medium | AI writing assistant with plagiarism awareness |
-| Research Paper Summarizer | Professors | Medium | Summarize and analyze research papers using AI |
-| Enrollment Predictor | Administration | High | Predict enrollment trends from historical data |
-| Curriculum Recommender | Professors | High | AI-driven curriculum gap analysis |
+| Welcome Guide Chatbot | Students | Low | Answer new students' questions about campus, rules, procedures — upload the handbook as context |
+| Study Buddy | Students | Low | Help students revise a course by generating questions from the syllabus |
+| Syllabus Generator | Professors | Low | Generate a structured syllabus (objectives, weekly plan, assessments) from a course description |
+| Rubric Builder | Professors | Low | Generate grading rubrics with criteria and levels from an assignment description |
+| Email Drafter | Administration | Low | Draft official communications (announcements, invitations) from bullet points |
+| Policy Q&A Bot | Administration | Low | Answer questions about internal regulations — upload the policy document as context |
+
+> All templates are rated **Low difficulty** because they rely on prompt engineering only — no coding required. Participants can build any of these in Google AI Studio during the 2-hour workshop.
 
 **Or create custom cards** based on the morning's quick wins list.
 
