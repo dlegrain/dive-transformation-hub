@@ -1,7 +1,8 @@
-import { DIMENSIONS, RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, PLAN_PHASES } from './constants';
+import { DIMENSIONS, RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, PLAN_PHASES, POWER_LEVELS, INTEREST_LEVELS } from './constants';
 import type {
   DimensionKey,
   DimensionAssessment,
+  CustomDimension,
   Stakeholder,
   SolutionCard,
   PlanTask,
@@ -12,16 +13,44 @@ import type {
 // Build the system prompt with all module data
 // ============================================================
 
-function dimensionSummary(dimensions: Record<DimensionKey, DimensionAssessment>): string {
-  return DIMENSIONS.map((dim) => {
-    const d = dimensions[dim.key];
-    const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
-    const avg = known.length > 0 ? (known.reduce((a, b) => a + b, 0) / known.length).toFixed(1) : 'N/A';
-    const toolsLabel = d.tools === 0 ? "I don't know" : String(d.tools);
-    const dataLabel = d.data === 0 ? "I don't know" : String(d.data);
-    const cultureLabel = d.culture === 0 ? "I don't know" : String(d.culture);
-    return `  - ${dim.label}: ${avg}/3 (Tools=${toolsLabel}, Data=${dataLabel}, Culture=${cultureLabel})`;
-  }).join('\n');
+function formatDimensionScore(d: DimensionAssessment): string {
+  const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
+  const avg = known.length > 0 ? (known.reduce((a, b) => a + b, 0) / known.length).toFixed(1) : 'N/A';
+  const toolsLabel = d.tools === 0 ? "I don't know" : String(d.tools);
+  const dataLabel = d.data === 0 ? "I don't know" : String(d.data);
+  const cultureLabel = d.culture === 0 ? "I don't know" : String(d.culture);
+  return `${avg}/3 (Tools=${toolsLabel}, Data=${dataLabel}, Culture=${cultureLabel})`;
+}
+
+function dimensionSummary(
+  dimensions: Record<DimensionKey, DimensionAssessment>,
+  hiddenDimensions: DimensionKey[] = [],
+  customDimensions: CustomDimension[] = [],
+): string {
+  const lines: string[] = [];
+
+  // Standard dimensions (excluding hidden)
+  DIMENSIONS.forEach((dim) => {
+    if (hiddenDimensions.includes(dim.key)) return;
+    lines.push(`  - ${dim.label}: ${formatDimensionScore(dimensions[dim.key])}`);
+  });
+
+  // Custom dimensions
+  customDimensions
+    .filter((cd) => cd.label.trim())
+    .forEach((cd) => {
+      lines.push(`  - ${cd.label} (custom): ${formatDimensionScore(cd.assessment)}`);
+    });
+
+  // Mention hidden dimensions so the AI knows they were deliberately excluded
+  if (hiddenDimensions.length > 0) {
+    const hiddenLabels = hiddenDimensions
+      .map((key) => DIMENSIONS.find((d) => d.key === key)?.label)
+      .filter(Boolean);
+    lines.push(`  [Hidden by participant as not relevant: ${hiddenLabels.join(', ')}]`);
+  }
+
+  return lines.join('\n');
 }
 
 function stakeholderSummary(stakeholders: Stakeholder[]): string {
@@ -31,7 +60,16 @@ function stakeholderSummary(stakeholders: Stakeholder[]): string {
       const behavior = RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label;
       const anxiety = ANXIETY_TYPES.find((a) => a.value === s.anxiety)?.label;
       const lever = MISSING_LEVERS.find((l) => l.value === s.missing_lever)?.label;
-      return `  - ${s.name} (${s.role}${s.discipline ? ', ' + s.discipline : ''}): ${behavior} | ${anxiety} | Missing: ${lever}`;
+      const powerLabel = s.power ? POWER_LEVELS.find((p) => p.value === s.power)?.label : null;
+      const interestLabel = s.interest ? INTEREST_LEVELS.find((i) => i.value === s.interest)?.label : null;
+      const quadrant = s.power && s.interest
+        ? s.power === 'high' && s.interest === 'high' ? 'KEY PLAYER'
+        : s.power === 'high' && s.interest === 'low' ? 'KEEP SATISFIED'
+        : s.power === 'low' && s.interest === 'high' ? 'KEEP INFORMED'
+        : 'MONITOR'
+        : null;
+      const piStr = powerLabel && interestLabel ? ` | ${powerLabel}/${interestLabel} → ${quadrant}` : '';
+      return `  - ${s.name} (${s.role}${s.discipline ? ', ' + s.discipline : ''}): ${behavior} | ${anxiety} | Missing: ${lever}${piStr}`;
     })
     .join('\n');
 }
@@ -90,6 +128,8 @@ export function buildSystemPrompt(
   solutions: SolutionCard[],
   tasks: PlanTask[],
   kpis: KPI[],
+  hiddenDimensions: DimensionKey[] = [],
+  customDimensions: CustomDimension[] = [],
 ): string {
   return `You are the DIVE AI Advisor, a strategic coach for university leaders planning AI adoption at their institution. You are embedded in the DIVE Transformation Hub workshop tool during a 4-day seminar in Ho Chi Minh City, Vietnam.
 
@@ -100,7 +140,7 @@ CURRENT MODULE: ${currentModule}
 MODULE DATA:
 
 Module 1 — Maturity Diagnostic:
-${dimensionSummary(dimensions)}
+${dimensionSummary(dimensions, hiddenDimensions, customDimensions)}
 
 Module 2 — Resistance Map:
 ${stakeholderSummary(stakeholders)}

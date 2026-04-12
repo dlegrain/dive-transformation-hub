@@ -72,6 +72,8 @@ export default function AIAdvisorPanel() {
         store.solutions,
         store.tasks,
         store.kpis,
+        store.hiddenDimensions,
+        store.customDimensions,
       );
 
       const conversationMessages = [...messages, userMessage].map((m) => ({
