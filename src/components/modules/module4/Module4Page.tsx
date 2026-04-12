@@ -66,7 +66,8 @@ export default function Module4Page() {
         type: 'danger' as const,
         message:
           'Warning: Among academics, a top-down approach can backfire. Professors evaluate tools privately. ' +
-          'Offer risk-free, individual experimentation instead. No public demos, no peer pressure (Singh & Strzelecki, 2026; Cao et al., 2026).',
+          'Offer risk-free, individual experimentation instead. No public demos, no peer pressure (Singh & Strzelecki, 2026; Cao et al., 2026). ' +
+          'Ensure training covers ethical use and student conduct codes — these are often the real faculty concerns, not just job security (Verano-Tacoronte et al., 2025).',
       };
     }
     return {

@@ -29,7 +29,9 @@ export function generateCounterMeasure(input: CounterMeasureInput): string {
     return (
       'Do not fight this! This opposition reflects critical engagement and professional responsibility. ' +
       'These are your most valuable allies for drafting ethical AI guidelines. ' +
-      'Involve them in governance and policy design, not in adoption campaigns (Hong et al., 2026).'
+      'Involve them in governance and policy design, not in adoption campaigns (Hong et al., 2026). ' +
+      'Their ethical concerns (integrity, plagiarism, student over-reliance) are the real adoption blockers for many faculty — ' +
+      'address them with clear institutional guidelines and student conduct codes (Verano-Tacoronte et al., 2025).'
     );
   }
 
@@ -73,6 +75,9 @@ export function generateCounterMeasure(input: CounterMeasureInput): string {
       parts.push(
         'Their root cause is existential fear of losing professional value. This is the hardest to solve. Frame AI as augmentation, not replacement. Provide career orientation sessions and demonstrate how AI frees time for higher-value tasks they actually enjoy (Cao et al., 2026).'
       );
+      parts.push(
+        'Important nuance: in public universities where employment is stable, displacement anxiety may NOT be the real blocker. The actual fears are often ethical (misusing the tool, losing integrity) and pedagogical (students plagiarizing, reduced effort). Focus training on ethical use frameworks and student conduct codes rather than job reassurance (Verano-Tacoronte et al., 2025).'
+      );
       break;
   }
 
@@ -80,6 +85,9 @@ export function generateCounterMeasure(input: CounterMeasureInput): string {
   if (input.role === 'Professors') {
     parts.push(
       'Key insight for professors: do NOT rely on social pressure, public demonstrations, or top-down mandates. Academics evaluate tools privately and in isolation. Offer risk-free, individual experimentation with no audience (Singh & Strzelecki, 2026).'
+    );
+    parts.push(
+      'Even professors who refuse to adopt AI must be trained on its capabilities — they need to understand how their own students are using it. Training should go beyond technical skills: focus on ethical use, academic integrity, and how to create student AI conduct codes (Verano-Tacoronte et al., 2025).'
     );
   }
 

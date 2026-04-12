@@ -80,6 +80,9 @@ function generateRecommendations(store: ReturnType<typeof useStore>): string[] {
     recs.push(
       `For professors: avoid public demonstrations and top-down mandates. Academics evaluate tools privately. Offer risk-free, individual experimentation with immediate time savings on their specific tasks (Singh & Strzelecki, 2026).`
     );
+    recs.push(
+      `Faculty training must go beyond technical skills: focus on ethical AI use, academic integrity, and creating student conduct codes. In stable public institutions, ethical and pedagogical fears — not job displacement — are the real adoption blockers. Even non-adopting faculty must understand how their students use AI (Verano-Tacoronte et al., 2025).`
+    );
   }
 
   // No KPIs

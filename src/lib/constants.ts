@@ -163,4 +163,5 @@ export const REFERENCES = [
   'Nguyen, H. L., & Hong, Y. (2025). National policy analysis of digital transformation in Vietnamese higher education. Policy Futures in Education.',
   'Nguyen, N. D., & Uong, L. N. T. (2026). Digital transformation in non-public universities: evidence from Hanoi. Cogent Social Sciences.',
   'Singh, H., & Strzelecki, A. (2026). Adoption of generative AI by academics. Springer.',
+  'Verano-Tacoronte, D. et al. (2025). Are university teachers ready for generative artificial intelligence? Unpacking faculty anxiety in the ChatGPT era. Education and Information Technologies.',
 ];

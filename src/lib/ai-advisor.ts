@@ -78,7 +78,9 @@ RESEARCH BASE — Your recommendations must be grounded in these studies:
 
 7. Nguyen & Uong (2026) — Empirical evidence from Vietnamese non-public universities: habits, data reliability, and organizational resistance are the main barriers.
 
-8. Singh & Strzelecki (2026) — For professors: do NOT use social pressure or public demos. They evaluate privately. Offer risk-free solo experimentation. Demonstrate immediate time savings on THEIR specific tasks.`;
+8. Singh & Strzelecki (2026) — For professors: do NOT use social pressure or public demos. They evaluate privately. Offer risk-free solo experimentation. Demonstrate immediate time savings on THEIR specific tasks.
+
+9. Verano-Tacoronte et al. (2025) — Faculty anxiety in stable public universities: job displacement anxiety has NO significant effect on adoption intention when employment is secure. The real blockers are ethical/pedagogical anxieties: fear of misusing the tool (integrity loss), and fear of negative impact on student learning (plagiarism, reduced effort). Training must focus on ethical use and student conduct codes, not just technical skills. Gender matters: female faculty show lower adoption intention — design targeted mentoring. Even faculty who refuse to adopt MUST be trained so they understand how their students use AI.`;
 
 export function buildSystemPrompt(
   currentModule: string,
@@ -172,6 +174,19 @@ export function detectAlerts(
         'Conflict: you identified displacement anxiety among professors (Module 2) but assigned a professor-facing task with a person in charge (Module 4). A top-down approach will likely backfire. Consider private pilot programs instead.',
       severity: 'critical',
       module: 'module4',
+    });
+  }
+
+  // Professors mapped without ethical/pedagogical consideration
+  const profStakeholders = stakeholders.filter((s) => s.role === 'Professors');
+  const hasEthicalProf = profStakeholders.some((s) => s.anxiety === 'ethical_engagement');
+  if (profStakeholders.length > 0 && !hasEthicalProf) {
+    alerts.push({
+      id: 'no-ethical-prof',
+      message:
+        'None of your professor stakeholders are mapped with ethical/pedagogical concerns. Research shows these are often the real adoption blockers for faculty — not just displacement anxiety. Consider whether some professors have ethical fears (integrity, plagiarism) that need specific training (Verano-Tacoronte et al., 2025).',
+      severity: 'info',
+      module: 'module2',
     });
   }
 
