@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Radar,
   RadarChart,
@@ -25,9 +25,11 @@ import {
   ArrowLeft,
   Monitor,
   EyeOff,
+  RefreshCw,
+  Wifi,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../../lib/store';
+import { supabase } from '../../lib/supabase';
 import {
   DIMENSIONS,
   RESISTANCE_BEHAVIORS,
@@ -35,7 +37,6 @@ import {
   MISSING_LEVERS,
   PLAN_PHASES,
 } from '../../lib/constants';
-import type { DimensionAssessment } from '../../types';
 
 type Tab = 'maturity' | 'resistance' | 'solutions' | 'plan';
 
@@ -49,17 +50,58 @@ const TABS: { id: Tab; label: string; icon: typeof RadarIcon; day: string }[] = 
 const COLORS = ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 const PIE_COLORS = ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6'];
 
-// Helper to compute dimension average
-function dimAvg(d: DimensionAssessment): number | null {
-  const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
-  return known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : null;
+// ============================================================
+// Data types from plenary-data Edge Function
+// ============================================================
+interface PlenaryData {
+  participantCount: number;
+  dimensionAverages: Record<string, { tools: number; data: number; culture: number }>;
+  stakeholders: { role: string; behavior: string; anxiety: string; missing_lever: string }[];
+  solutions: { name: string; target: string; difficulty: string; status: string; assigned_phase: number | null }[];
+  tasks: { name: string; phase: number; champion_target: string; priority: string; status: string }[];
+  kpis: { name: string; type: string; phase: number | null }[];
 }
+
+const EMPTY_DATA: PlenaryData = {
+  participantCount: 0,
+  dimensionAverages: {},
+  stakeholders: [],
+  solutions: [],
+  tasks: [],
+  kpis: [],
+};
+
+// Auto-refresh interval (seconds)
+const REFRESH_INTERVAL = 15;
 
 export default function PlenaryDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('maturity');
   const [presentationMode, setPresentationMode] = useState(false);
+  const [data, setData] = useState<PlenaryData>(EMPTY_DATA);
+  const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const navigate = useNavigate();
-  const store = useStore();
+
+  const fetchData = useCallback(async () => {
+    try {
+      const { data: fnData, error } = await supabase.functions.invoke('plenary-data');
+      if (error) throw error;
+
+      setData(fnData);
+      setLastRefresh(new Date());
+    } catch (err) {
+      console.error('Failed to fetch plenary data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initial fetch + auto-refresh
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, REFRESH_INTERVAL * 1000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   return (
     <div className={`min-h-screen ${presentationMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -81,17 +123,36 @@ export default function PlenaryDashboard() {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setPresentationMode(!presentationMode)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            presentationMode
-              ? 'bg-primary-600 text-white hover:bg-primary-700'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <Monitor size={16} />
-          {presentationMode ? 'Exit Presentation' : 'Presentation Mode'}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Live status */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${presentationMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+            <Wifi size={12} className="text-green-500" />
+            <span>{data.participantCount} participant{data.participantCount !== 1 ? 's' : ''}</span>
+            {lastRefresh && (
+              <span className="opacity-50">
+                · {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => { setLoading(true); fetchData(); }}
+            className={`p-2 rounded-lg transition-colors ${presentationMode ? 'text-gray-400 hover:text-white hover:bg-gray-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+            title="Refresh now"
+          >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={() => setPresentationMode(!presentationMode)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              presentationMode
+                ? 'bg-primary-600 text-white hover:bg-primary-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Monitor size={16} />
+            {presentationMode ? 'Exit Presentation' : 'Presentation Mode'}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -121,17 +182,25 @@ export default function PlenaryDashboard() {
 
       {/* Content */}
       <div className="p-6 max-w-7xl mx-auto">
-        {activeTab === 'maturity' && <MaturityTab store={store} dark={presentationMode} />}
-        {activeTab === 'resistance' && <ResistanceTab store={store} dark={presentationMode} />}
-        {activeTab === 'solutions' && <SolutionsTab store={store} dark={presentationMode} />}
-        {activeTab === 'plan' && <PlanTab store={store} dark={presentationMode} />}
+        {loading && data === EMPTY_DATA ? (
+          <div className="flex items-center justify-center py-20">
+            <RefreshCw size={24} className="animate-spin text-gray-400" />
+          </div>
+        ) : (
+          <>
+            {activeTab === 'maturity' && <MaturityTab data={data} dark={presentationMode} />}
+            {activeTab === 'resistance' && <ResistanceTab data={data} dark={presentationMode} />}
+            {activeTab === 'solutions' && <SolutionsTab data={data} dark={presentationMode} />}
+            {activeTab === 'plan' && <PlanTab data={data} dark={presentationMode} />}
+          </>
+        )}
       </div>
     </div>
   );
 }
 
 // ============================================================
-// Card wrapper
+// Shared components
 // ============================================================
 function Card({ title, children, dark, className = '' }: { title: string; children: React.ReactNode; dark: boolean; className?: string }) {
   return (
@@ -165,26 +234,27 @@ function StatBox({ label, value, color, dark }: { label: string; value: string |
 // ============================================================
 // Module 1: Maturity — Radar + bar chart + stats
 // ============================================================
-function MaturityTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: boolean }) {
-  const { dimensions } = store;
+function MaturityTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
+  const { dimensionAverages, participantCount } = data;
 
   const radarData = DIMENSIONS.map((dim) => {
-    const avg = dimAvg(dimensions[dim.key]);
+    const avg = dimensionAverages[dim.key];
+    const score = avg ? Math.round(((avg.tools + avg.data + avg.culture) / 3) * 10) / 10 : undefined;
     return {
       dimension: dim.label,
-      score: avg !== null ? Math.round(avg * 10) / 10 : undefined,
+      score,
       fullMark: 3,
     };
   });
 
   const barData = DIMENSIONS.map((dim, i) => {
-    const d = dimensions[dim.key];
+    const avg = dimensionAverages[dim.key];
     return {
       name: dim.label.length > 15 ? dim.label.substring(0, 15) + '...' : dim.label,
-      tools: d.tools,
-      data: d.data,
-      culture: d.culture,
-      avg: dimAvg(d),
+      tools: avg?.tools || 0,
+      data: avg?.data || 0,
+      culture: avg?.culture || 0,
+      avg: avg ? (avg.tools + avg.data + avg.culture) / 3 : null,
       fill: COLORS[i],
     };
   });
@@ -203,13 +273,13 @@ function MaturityTab({ store, dark }: { store: ReturnType<typeof useStore>; dark
   };
 
   if (scored.length === 0) {
-    return <EmptyState message="No maturity data collected yet." dark={dark} />;
+    return <EmptyState message="No maturity data collected yet. Waiting for participants..." dark={dark} />;
   }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Radar */}
-      <Card title="Group Maturity Radar" dark={dark}>
+      <Card title={`Group Maturity Radar (${participantCount} participant${participantCount !== 1 ? 's' : ''})`} dark={dark}>
         <ResponsiveContainer width="100%" height={350}>
           <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
             <PolarGrid stroke={dark ? '#374151' : '#e5e7eb'} />
@@ -231,7 +301,7 @@ function MaturityTab({ store, dark }: { store: ReturnType<typeof useStore>; dark
           </div>
         </Card>
 
-        <Card title="Sub-criteria Breakdown" dark={dark}>
+        <Card title="Sub-criteria Breakdown (Averages)" dark={dark}>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#374151' : '#f3f4f6'} />
@@ -253,32 +323,28 @@ function MaturityTab({ store, dark }: { store: ReturnType<typeof useStore>; dark
 // ============================================================
 // Module 2: Resistance — distribution charts
 // ============================================================
-function ResistanceTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: boolean }) {
-  const { stakeholders } = store;
+function ResistanceTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
+  const { stakeholders } = data;
 
   if (stakeholders.length === 0) {
-    return <EmptyState message="No stakeholder data collected yet." dark={dark} />;
+    return <EmptyState message="No stakeholder data collected yet. Waiting for participants..." dark={dark} />;
   }
 
-  // Count by behavior
   const behaviorCounts = RESISTANCE_BEHAVIORS.map((b) => ({
     name: b.label.length > 18 ? b.label.substring(0, 18) + '...' : b.label,
     count: stakeholders.filter((s) => s.behavior === b.value).length,
   })).filter((b) => b.count > 0);
 
-  // Count by anxiety
   const anxietyCounts = ANXIETY_TYPES.map((a) => ({
     name: a.label,
     count: stakeholders.filter((s) => s.anxiety === a.value).length,
   })).filter((a) => a.count > 0);
 
-  // Count by missing lever
   const leverCounts = MISSING_LEVERS.map((l) => ({
     name: l.label,
     count: stakeholders.filter((s) => s.missing_lever === l.value).length,
   })).filter((l) => l.count > 0);
 
-  // Count by role
   const roleCounts = ['Students', 'Professors', 'Administration', 'Direction'].map((r) => ({
     name: r,
     count: stakeholders.filter((s) => s.role === r).length,
@@ -289,7 +355,6 @@ function ResistanceTab({ store, dark }: { store: ReturnType<typeof useStore>; da
 
   return (
     <div className="space-y-6">
-      {/* Summary stats */}
       <div className="grid grid-cols-4 gap-4">
         <StatBox label="Total Stakeholders" value={stakeholders.length} dark={dark} />
         <StatBox label="Supportive" value={supportiveCount} color="#22c55e" dark={dark} />
@@ -298,7 +363,6 @@ function ResistanceTab({ store, dark }: { store: ReturnType<typeof useStore>; da
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Behavior distribution */}
         <Card title="Resistance Behaviors" dark={dark}>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={behaviorCounts} margin={{ left: 10, right: 20 }}>
@@ -315,7 +379,6 @@ function ResistanceTab({ store, dark }: { store: ReturnType<typeof useStore>; da
           </ResponsiveContainer>
         </Card>
 
-        {/* Anxiety distribution */}
         <Card title="Anxiety Types (Cao et al.)" dark={dark}>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -339,7 +402,6 @@ function ResistanceTab({ store, dark }: { store: ReturnType<typeof useStore>; da
           </ResponsiveContainer>
         </Card>
 
-        {/* Missing levers */}
         <Card title="Missing Diffusion Levers (Singh & Strzelecki)" dark={dark}>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={leverCounts} layout="vertical" margin={{ left: 10, right: 20 }}>
@@ -352,7 +414,6 @@ function ResistanceTab({ store, dark }: { store: ReturnType<typeof useStore>; da
           </ResponsiveContainer>
         </Card>
 
-        {/* By role */}
         <Card title="Stakeholders by Role" dark={dark}>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -380,41 +441,36 @@ function ResistanceTab({ store, dark }: { store: ReturnType<typeof useStore>; da
 }
 
 // ============================================================
-// Module 3: Solutions — cards overview
+// Module 3: Solutions
 // ============================================================
-function SolutionsTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: boolean }) {
-  const { solutions } = store;
+function SolutionsTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
+  const { solutions } = data;
 
   if (solutions.length === 0) {
-    return <EmptyState message="No solutions data collected yet." dark={dark} />;
+    return <EmptyState message="No solutions data collected yet. Waiting for participants..." dark={dark} />;
   }
 
-  // By target
   const targetCounts = ['Students', 'Professors', 'Administration'].map((t) => ({
     name: t,
     count: solutions.filter((s) => s.target === t).length,
   })).filter((t) => t.count > 0);
 
-  // By difficulty
   const difficultyCounts = ['Low', 'Medium', 'High'].map((d) => ({
     name: d,
     count: solutions.filter((s) => s.difficulty === d).length,
   }));
 
-  // By status
   const statusCounts = ['Planned', 'Prototyped', 'Tested'].map((s) => ({
     name: s,
     count: solutions.filter((sol) => sol.status === s).length,
   }));
 
-  // By phase
   const phaseCounts = PLAN_PHASES.map((p) => ({
     name: `Phase ${p.phase}: ${p.label}`,
     count: solutions.filter((s) => s.assigned_phase === p.phase).length,
     color: p.color,
   }));
 
-  // Most popular solutions (by name)
   const solutionNames = solutions.reduce<Record<string, number>>((acc, s) => {
     acc[s.name] = (acc[s.name] || 0) + 1;
     return acc;
@@ -425,7 +481,6 @@ function SolutionsTab({ store, dark }: { store: ReturnType<typeof useStore>; dar
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
         <StatBox label="Total Solutions" value={solutions.length} dark={dark} />
         <StatBox label="For Students" value={targetCounts.find((t) => t.name === 'Students')?.count || 0} color="#3b82f6" dark={dark} />
@@ -434,7 +489,6 @@ function SolutionsTab({ store, dark }: { store: ReturnType<typeof useStore>; dar
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* By status */}
         <Card title="Solution Status" dark={dark}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={statusCounts} margin={{ left: 10, right: 20 }}>
@@ -451,7 +505,6 @@ function SolutionsTab({ store, dark }: { store: ReturnType<typeof useStore>; dar
           </ResponsiveContainer>
         </Card>
 
-        {/* By difficulty */}
         <Card title="Difficulty Distribution" dark={dark}>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
@@ -474,7 +527,6 @@ function SolutionsTab({ store, dark }: { store: ReturnType<typeof useStore>; dar
           </ResponsiveContainer>
         </Card>
 
-        {/* By phase */}
         <Card title="Solutions by Phase" dark={dark}>
           <div className="space-y-3">
             {phaseCounts.map((p) => (
@@ -497,7 +549,6 @@ function SolutionsTab({ store, dark }: { store: ReturnType<typeof useStore>; dar
           </div>
         </Card>
 
-        {/* Most popular solutions */}
         <Card title="Most Chosen Solutions" dark={dark}>
           <div className="space-y-2">
             {topSolutions.map(([name, count], i) => (
@@ -522,16 +573,15 @@ function SolutionsTab({ store, dark }: { store: ReturnType<typeof useStore>; dar
 }
 
 // ============================================================
-// Module 4: Plan — timeline + KPIs + champions
+// Module 4: Plan
 // ============================================================
-function PlanTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: boolean }) {
-  const { tasks, kpis } = store;
+function PlanTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
+  const { tasks, kpis } = data;
 
   if (tasks.length === 0 && kpis.length === 0) {
-    return <EmptyState message="No plan data collected yet." dark={dark} />;
+    return <EmptyState message="No plan data collected yet. Waiting for participants..." dark={dark} />;
   }
 
-  // Tasks by phase
   const tasksByPhase = PLAN_PHASES.map((p) => ({
     name: `Phase ${p.phase}`,
     label: p.label,
@@ -542,29 +592,24 @@ function PlanTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: bo
     inProgress: tasks.filter((t) => t.phase === p.phase && t.status === 'In Progress').length,
   }));
 
-  // Tasks by priority
   const priorityCounts = ['High', 'Medium', 'Low'].map((p) => ({
     name: p,
     count: tasks.filter((t) => t.priority === p).length,
   }));
 
-  // Tasks by status
   const statusCounts = ['Not Started', 'In Progress', 'Done'].map((s) => ({
     name: s,
     count: tasks.filter((t) => t.status === s).length,
   }));
 
-  // Champion roles
   const championRoles = ['Students', 'Professors', 'Administration'].map((r) => ({
     name: r,
     count: tasks.filter((t) => t.champion_target === r).length,
   })).filter((r) => r.count > 0);
 
-  // KPI types
   const kpiLeading = kpis.filter((k) => k.type === 'Leading').length;
   const kpiLagging = kpis.filter((k) => k.type === 'Lagging').length;
 
-  // Most common task names
   const taskNames = tasks.reduce<Record<string, number>>((acc, t) => {
     acc[t.name] = (acc[t.name] || 0) + 1;
     return acc;
@@ -575,7 +620,6 @@ function PlanTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: bo
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
         <StatBox label="Total Actions" value={tasks.length} dark={dark} />
         <StatBox label="Completed" value={statusCounts.find((s) => s.name === 'Done')?.count || 0} color="#22c55e" dark={dark} />
@@ -584,7 +628,6 @@ function PlanTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: bo
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Phase timeline */}
         <Card title="Actions by Phase" dark={dark} className="lg:col-span-2">
           <div className="grid grid-cols-3 gap-4">
             {tasksByPhase.map((p) => (
@@ -623,7 +666,6 @@ function PlanTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: bo
           </div>
         </Card>
 
-        {/* Priority / Status */}
         <Card title="Task Status" dark={dark}>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={statusCounts} margin={{ left: 10, right: 20 }}>
@@ -640,7 +682,6 @@ function PlanTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: bo
           </ResponsiveContainer>
         </Card>
 
-        {/* KPIs + Champions */}
         <Card title="KPIs & Champions" dark={dark}>
           <div className="space-y-4">
             <div>
@@ -675,7 +716,6 @@ function PlanTab({ store, dark }: { store: ReturnType<typeof useStore>; dark: bo
           </div>
         </Card>
 
-        {/* Most common actions */}
         {topTasks.length > 0 && (
           <Card title="Most Common Actions" dark={dark} className="lg:col-span-2">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

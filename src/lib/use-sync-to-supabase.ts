@@ -17,38 +17,20 @@ export function useSyncToSupabase() {
   const participantId = participant?.id;
   const groupId = group?.id;
 
-  // Helper to call the Edge Function
+  // Helper to call the Edge Function (always via Supabase, no dev proxy needed)
   async function sync(module: string, data: Record<string, unknown>) {
     if (!participantId) return;
 
     try {
-      const devProxy = import.meta.env.DEV ? 'http://localhost:3001' : null;
-
-      if (devProxy) {
-        const resp = await fetch(`${devProxy}/functions/v1/sync-data`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            participant_id: participantId,
-            group_id: groupId || null,
-            module,
-            data,
-          }),
-        });
-        if (!resp.ok) {
-          console.error(`sync-data error (${module}):`, resp.status);
-        }
-      } else {
-        const { error } = await supabase.functions.invoke('sync-data', {
-          body: {
-            participant_id: participantId,
-            group_id: groupId || null,
-            module,
-            data,
-          },
-        });
-        if (error) console.error(`sync-data error (${module}):`, error);
-      }
+      const { error } = await supabase.functions.invoke('sync-data', {
+        body: {
+          participant_id: participantId,
+          group_id: groupId || null,
+          module,
+          data,
+        },
+      });
+      if (error) console.error(`sync-data error (${module}):`, error);
     } catch (err) {
       console.error(`sync-data failed (${module}):`, err);
     }
