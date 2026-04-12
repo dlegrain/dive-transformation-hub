@@ -1,13 +1,24 @@
 // Local dev proxy for AI Advisor — mimics the Supabase Edge Function
-// Run with: node dev-proxy.mjs
+// Run with: node dev-proxy.mjs (reads ANTHROPIC_API_KEY from .env)
 
 import http from 'http';
 import https from 'https';
+import { readFileSync } from 'fs';
+
+// Load .env file
+try {
+  const envContent = readFileSync('.env', 'utf-8');
+  for (const line of envContent.split('\n')) {
+    const [key, ...rest] = line.split('=');
+    if (key && rest.length > 0 && !process.env[key.trim()]) {
+      process.env[key.trim()] = rest.join('=').trim();
+    }
+  }
+} catch { /* no .env file */ }
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!ANTHROPIC_API_KEY) {
-  console.error('ANTHROPIC_API_KEY environment variable is required');
-  console.error('Run with: ANTHROPIC_API_KEY=sk-ant-... node dev-proxy.mjs');
+  console.error('ANTHROPIC_API_KEY not found in .env or environment');
   process.exit(1);
 }
 const PORT = 3001;
