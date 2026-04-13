@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { useStore } from '../../lib/store';
 import { DIMENSIONS, RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, PLAN_PHASES, REFERENCES } from '../../lib/constants';
-import { generateCounterMeasure } from '../../lib/counter-measures';
+// generateCounterMeasure archived — using stored AI-generated counter-measures now
 import { detectAlerts } from '../../lib/ai-advisor';
 import type { DimensionKey, DimensionAssessment } from '../../types';
 
@@ -536,13 +536,7 @@ export default function ExportPage() {
                       {s.name} ({s.role})
                     </div>
                     <div style={styles.counterMeasure}>
-                      {generateCounterMeasure({
-                        role: s.role,
-                        discipline: s.discipline,
-                        behavior: s.behavior,
-                        anxiety: s.anxiety,
-                        missingLever: s.missing_lever,
-                      })}
+                      {s.generated_counter_measure || 'No counter-measure generated yet.'}
                     </div>
                   </div>
                 ))}

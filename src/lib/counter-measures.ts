@@ -1,3 +1,8 @@
+// ============================================================
+// ARCHIVED — Template-based counter-measures (replaced by AI call)
+// Kept for reference. See M2ConsensusForm.tsx generateAICounterMeasure()
+// ============================================================
+
 import type { ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline, PowerLevel, InterestLevel } from '../types';
 
 interface CounterMeasureInput {
@@ -10,6 +15,8 @@ interface CounterMeasureInput {
   missingLever: MissingLever;
 }
 
+// @ts-ignore — archived, not called anymore
+// eslint-disable-next-line
 export function generateCounterMeasure(input: CounterMeasureInput): string {
   const parts: string[] = [];
 

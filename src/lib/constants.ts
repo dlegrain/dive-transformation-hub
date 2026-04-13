@@ -102,10 +102,36 @@ export const ANXIETY_TYPES = [
   { value: 'ethical_engagement', label: 'Ethical & Pedagogical Barriers', description: 'Critical engagement with AI risks — this is an ASSET', source: 'Hong et al., 2026' },
 ] as const;
 
+// Role-specific missing levers
+export const MISSING_LEVERS_BY_ROLE = {
+  Professors: [
+    { value: 'relative_advantage', label: 'Relative Advantage', description: "They don't see how AI improves their specific tasks", source: 'Singh & Strzelecki, 2026' },
+    { value: 'compatibility', label: 'Compatibility', description: "AI doesn't fit their existing teaching/research workflow", source: 'Singh & Strzelecki, 2026' },
+    { value: 'low_complexity', label: 'Low Complexity', description: 'The tool feels too complicated to learn or use', source: 'Singh & Strzelecki, 2026' },
+  ],
+  Students: [
+    { value: 'facilitating_conditions', label: 'Facilitating Conditions', description: 'No access, no devices, bad WiFi — practical barriers', source: 'Bui et al., 2025' },
+    { value: 'social_influence', label: 'Social Influence', description: 'No peers or role models using AI around them', source: 'Bui et al., 2025' },
+    { value: 'peer_success', label: 'Peer Success Stories', description: "They haven't seen students like them succeed with AI", source: 'Bui et al., 2025' },
+  ],
+  Direction: [
+    { value: 'governance_gap', label: 'Governance Gap', description: 'No steering committee or digital strategy in place', source: 'Nguyen & Hong, 2025' },
+    { value: 'budget_gap', label: 'Budget Gap', description: 'No dedicated budget or resource allocation for AI', source: 'Nguyen & Hong, 2025' },
+    { value: 'strategic_vision', label: 'Strategic Vision', description: 'AI not integrated into the institution\'s long-term plan', source: 'Nguyen & Hong, 2025' },
+  ],
+  Administration: [
+    { value: 'workload_overload', label: 'Workload Overload', description: 'Already overwhelmed — no bandwidth to learn new tools', source: 'Deacon et al., 2025' },
+    { value: 'process_silos', label: 'Process Silos', description: 'Departments don\'t share data or systems', source: 'Deacon et al., 2025' },
+    { value: 'legacy_rules', label: 'Legacy Rules', description: 'Internal policies written for paper, not digital', source: 'Deacon et al., 2025' },
+  ],
+} as const;
+
+// Flat list of all levers (for display/lookup)
 export const MISSING_LEVERS = [
-  { value: 'relative_advantage', label: 'Relative Advantage', description: 'They don\'t see how AI improves their work', source: 'Singh & Strzelecki, 2026' },
-  { value: 'compatibility', label: 'Compatibility', description: 'AI doesn\'t fit their existing workflow', source: 'Singh & Strzelecki, 2026' },
-  { value: 'low_complexity', label: 'Low Complexity', description: 'The tool feels too complicated to learn', source: 'Singh & Strzelecki, 2026' },
+  ...MISSING_LEVERS_BY_ROLE.Professors,
+  ...MISSING_LEVERS_BY_ROLE.Students,
+  ...MISSING_LEVERS_BY_ROLE.Direction,
+  ...MISSING_LEVERS_BY_ROLE.Administration,
 ] as const;
 
 export const STAKEHOLDER_ROLES = ['Students', 'Professors', 'Administration', 'Direction'] as const;

@@ -44,7 +44,15 @@ export type StakeholderRole = 'Students' | 'Professors' | 'Administration' | 'Di
 export type Discipline = 'STEM' | 'Humanities' | 'Social Sciences' | 'Other';
 export type ResistanceBehavior = 'supportive' | 'pronounced_refusal' | 'pronounced_opposing' | 'subtle_undermining' | 'subtle_avoiding';
 export type AnxietyType = 'learning' | 'sociotechnical' | 'displacement' | 'ethical_engagement';
-export type MissingLever = 'relative_advantage' | 'compatibility' | 'low_complexity';
+export type MissingLever =
+  // Professors (Singh & Strzelecki, 2026)
+  | 'relative_advantage' | 'compatibility' | 'low_complexity'
+  // Students (Bui et al., 2025)
+  | 'facilitating_conditions' | 'social_influence' | 'peer_success'
+  // Direction (Nguyen & Hong, 2025)
+  | 'governance_gap' | 'budget_gap' | 'strategic_vision'
+  // Administration (Deacon et al., 2025)
+  | 'workload_overload' | 'process_silos' | 'legacy_rules';
 export type PowerLevel = 'high' | 'low';
 export type InterestLevel = 'high' | 'low';
 

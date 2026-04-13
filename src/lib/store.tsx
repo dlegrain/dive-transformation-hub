@@ -158,8 +158,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const effectiveDimensions = isConsensusActive ? consensusDimensions : dimensions;
   const effectiveCustomDimensions = isConsensusActive ? consensusCustomDimensions : customDimensions;
   const effectiveHiddenDimensions = isConsensusActive ? consensusHiddenDimensions : hiddenDimensions;
-  const isM2ConsensusActive = m2ConsensusStatus === 'validated' && consensusStakeholders !== null;
-  const effectiveStakeholders = isM2ConsensusActive ? consensusStakeholders : stakeholders;
+  // Use consensus stakeholders when available (even in draft), fallback to individual
+  const effectiveStakeholders = consensusStakeholders && consensusStakeholders.length > 0 ? consensusStakeholders : stakeholders;
 
   const setDimension = (key: DimensionKey, sub: 'tools' | 'data' | 'culture', value: 0 | 1 | 2 | 3) => {
     setDimensions((prev) => ({
