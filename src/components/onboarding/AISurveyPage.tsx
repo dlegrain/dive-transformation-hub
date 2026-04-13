@@ -13,6 +13,9 @@ const AI_MODELS = [
   'Perplexity',
   'Mistral / Le Chat',
   'Llama (Meta)',
+  'Kimi',
+  'Grok',
+  'NotebookLM',
   'Other',
 ] as const;
 
@@ -56,6 +59,7 @@ export default function AISurveyPage() {
   const navigate = useNavigate();
   const { participant, session } = useAuth();
   const [modelsUsed, setModelsUsed] = useState<string[]>([]);
+  const [otherModel, setOtherModel] = useState('');
   const [taskTypes, setTaskTypes] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<AIFrequency | ''>('');
   const [paidVsFree, setPaidVsFree] = useState<PaidVsFree | ''>('');
@@ -76,11 +80,16 @@ export default function AISurveyPage() {
     setError('');
     setLoading(true);
 
+    // Replace generic "Other" with the actual name if provided
+    const finalModels = modelsUsed.map((m) =>
+      m === 'Other' && otherModel.trim() ? `Other: ${otherModel.trim()}` : m
+    );
+
     const { error: dbError } = await supabase.from('dive_ai_surveys').insert({
       participant_id: participant.id,
       session_id: session.id,
-      models_count: modelsUsed.length,
-      models_used: modelsUsed,
+      models_count: finalModels.length,
+      models_used: finalModels,
       task_types: taskTypes,
       frequency,
       paid_vs_free: paidVsFree,
@@ -177,6 +186,15 @@ export default function AISurveyPage() {
                     </button>
                   ))}
                 </div>
+                {modelsUsed.includes('Other') && (
+                  <input
+                    type="text"
+                    value={otherModel}
+                    onChange={(e) => setOtherModel(e.target.value)}
+                    placeholder="Which other AI tool(s)?"
+                    className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  />
+                )}
               </div>
 
               {/* Task types */}
