@@ -381,6 +381,18 @@ Deno.serve(async (req) => {
         .select("id, name, institution_name, consensus_status, consensus_validated_at");
       if (grpErr) throw grpErr;
 
+      // Exclude admin group (contains admin email)
+      const ADMIN_EMAIL = "dlegrain@gmail.com";
+      const { data: adminParticipant } = await supabase
+        .from("dive_participants")
+        .select("group_id")
+        .eq("email", ADMIN_EMAIL)
+        .limit(1);
+      const adminGroupId = adminParticipant?.[0]?.group_id;
+      const filteredGroups = (groups || []).filter(
+        (g: Record<string, unknown>) => g.id !== adminGroupId
+      );
+
       // Fetch all consensus assessment rows
       const { data: consensusRows, error: consErr } = await supabase
         .from("dive_assessments")
@@ -394,7 +406,7 @@ Deno.serve(async (req) => {
         consensusMap[row.group_id] = row;
       }
 
-      const result = (groups || []).map((g: Record<string, unknown>) => {
+      const result = filteredGroups.map((g: Record<string, unknown>) => {
         const cRow = consensusMap[g.id as string];
         return {
           group_id: g.id,

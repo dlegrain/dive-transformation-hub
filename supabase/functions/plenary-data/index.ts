@@ -37,11 +37,22 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch individual assessments only (exclude consensus rows)
-    const { data: assessments, error: assErr } = await supabase
+    // Exclude admin participant from all plenary data
+    const ADMIN_EMAIL = "dlegrain@gmail.com";
+    const { data: adminParticipant } = await supabase
+      .from("dive_participants")
+      .select("id")
+      .eq("email", ADMIN_EMAIL)
+      .limit(1);
+    const adminId = adminParticipant?.[0]?.id;
+
+    // Fetch individual assessments only (exclude consensus rows + admin)
+    let assessmentQuery = supabase
       .from("dive_assessments")
       .select("*")
       .or("is_consensus.is.null,is_consensus.eq.false");
+    if (adminId) assessmentQuery = assessmentQuery.neq("participant_id", adminId);
+    const { data: assessments, error: assErr } = await assessmentQuery;
     if (assErr) throw assErr;
 
     // Aggregate dimension averages across all participants
@@ -79,31 +90,39 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch all stakeholders
-    const { data: stakeholders } = await supabase
+    // Fetch all stakeholders (exclude admin)
+    let stakeholderQuery = supabase
       .from("dive_stakeholders")
       .select("role, behavior, anxiety, missing_lever");
+    if (adminId) stakeholderQuery = stakeholderQuery.neq("participant_id", adminId);
+    const { data: stakeholders } = await stakeholderQuery;
 
-    // Fetch all solutions
-    const { data: solutions } = await supabase
+    // Fetch all solutions (exclude admin)
+    let solutionQuery = supabase
       .from("dive_solutions")
       .select("name, target, difficulty, status, assigned_phase");
+    if (adminId) solutionQuery = solutionQuery.neq("participant_id", adminId);
+    const { data: solutions } = await solutionQuery;
 
-    // Fetch all tasks + kpis
-    const { data: tasks } = await supabase
+    // Fetch all tasks + kpis (exclude admin)
+    let taskQuery = supabase
       .from("dive_plan_tasks")
-      .select(
-        "name, phase, champion_target, priority, status"
-      );
+      .select("name, phase, champion_target, priority, status");
+    if (adminId) taskQuery = taskQuery.neq("participant_id", adminId);
+    const { data: tasks } = await taskQuery;
 
-    const { data: kpis } = await supabase
+    let kpiQuery = supabase
       .from("dive_kpis")
       .select("name, type, phase");
+    if (adminId) kpiQuery = kpiQuery.neq("participant_id", adminId);
+    const { data: kpis } = await kpiQuery;
 
-    // Fetch AI usage surveys
-    const { data: surveys } = await supabase
+    // Fetch AI usage surveys (exclude admin)
+    let surveyQuery = supabase
       .from("dive_ai_surveys")
       .select("models_count, models_used, task_types, frequency, paid_vs_free, vibe_coding");
+    if (adminId) surveyQuery = surveyQuery.neq("participant_id", adminId);
+    const { data: surveys } = await surveyQuery;
 
     const result = {
       participantCount: assessments?.length || 0,
