@@ -1,4 +1,4 @@
-import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe } from 'lucide-react';
+import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe, GraduationCap } from 'lucide-react';
 
 const articles = [
   {
@@ -163,6 +163,51 @@ export default function DocsPage() {
               <div className="text-xs opacity-75 mt-0.5">{r.detail}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* AI Tutorials */}
+      <div className="mb-8 bg-white border border-gray-200 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <GraduationCap size={18} className="text-primary-600" />
+          <h2 className="text-sm font-semibold text-gray-900">AI Tutorials</h2>
+        </div>
+        <p className="text-xs text-gray-500 mb-4">
+          Hands-on tutorials to explore AI concepts covered during the seminar.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <a
+            href="https://tuto-rag.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-lg border border-purple-200 bg-purple-50 p-4 hover:border-purple-400 hover:shadow-md transition-all group"
+          >
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-purple-800 group-hover:text-purple-900">
+                RAG Tutorial
+              </div>
+              <div className="text-xs text-purple-600 mt-0.5">
+                Learn how Retrieval-Augmented Generation works — the technique behind NotebookLM and enterprise AI assistants.
+              </div>
+            </div>
+            <ExternalLink size={14} className="text-purple-300 group-hover:text-purple-500 shrink-0" />
+          </a>
+          <a
+            href="https://vibe-coding-trends.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 hover:border-indigo-400 hover:shadow-md transition-all group"
+          >
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-indigo-800 group-hover:text-indigo-900">
+                Vibe Coding Tutorial
+              </div>
+              <div className="text-xs text-indigo-600 mt-0.5">
+                Discover vibe coding — building software by describing what you want in natural language, powered by AI.
+              </div>
+            </div>
+            <ExternalLink size={14} className="text-indigo-300 group-hover:text-indigo-500 shrink-0" />
+          </a>
         </div>
       </div>
 
