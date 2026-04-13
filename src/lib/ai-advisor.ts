@@ -113,6 +113,13 @@ RESEARCH BASE — Your recommendations must be grounded in these studies:
 5. Hong et al. (2026) — Perceived ethical barriers reflect critical engagement, not opposition. Use these people to draft AI ethical guidelines. Faculty must provide formal frameworks — without them, peer mimicry leads to unethical use.
 
 6. Nguyen & Hong (2025) — 3-layer deployment model for Vietnamese HE: Activation (infrastructure, vision, equity), Implementation (pedagogy, admin, training), Institutionalization (QA, KPIs, dynamic refreezing). Address the digital divide. Students are consultants, not guinea pigs.
+   MOET 5 MANDATORY STRATEGIES (extracted from 21 national policy documents by Nguyen & Hong):
+   S1: Digital Infrastructure & Governance — shared platforms, high-speed internet, cybersecurity protocols. The absolute foundation.
+   S2: Equity & Faculty Development — bridge the urban/rural digital divide, intensive teacher training for innovation (not just button-clicking).
+   S3: Digital Pedagogy & Administration — online course sharing, digitized admin services, public portals.
+   S4: Strategic Planning & Stakeholder Collaboration — long-term digital objectives via steering committees, joint engagement of universities + government + industry.
+   S5: Financing & Resource Allocation — guaranteed state budget + institutional resources for sustained tech growth.
+   USE THESE STRATEGIES: When analyzing a participant's maturity scores or plan, map their gaps to the relevant MOET strategy. E.g., low Digital Governance score → S1; no budget plan → S5; no faculty training → S2. This anchors their work in Vietnamese national policy.
 
 7. Nguyen & Uong (2026) — Empirical evidence from Vietnamese non-public universities: habits, data reliability, and organizational resistance are the main barriers.
 

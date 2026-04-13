@@ -118,7 +118,27 @@ Your radar IS your diagnostic. It tells you:
 
 ---
 
-### SLIDE 9 — AI Tool of the Day: Your Critical Advisor
+### SLIDE 9 — Your Radar Meets National Policy
+
+Your radar score is not just an exercise — it maps directly to **MOET's 5 mandatory strategies** for digital transformation in Vietnamese higher education.
+
+*(Nguyen & Hong, 2025 — systematic analysis of 21 national policy documents)*
+
+| MOET Strategy | Your MTM Dimension | Ask Yourself |
+|---|---|---|
+| **S1. Infrastructure & Governance** | Digital Governance | Do we have shared platforms, connectivity, cybersecurity? |
+| **S2. Equity & Faculty Development** | Teaching & Learning | Are ALL teachers trained — not just the early adopters? |
+| **S3. Digital Pedagogy & Admin** | Academic Mgmt + Admin Mgmt | Are courses and admin services actually digitized? |
+| **S4. Strategic Planning & Stakeholders** | Institutional Image + Extension | Do we have a steering committee with industry partners? |
+| **S5. Financing & Resources** | All dimensions | Is there a dedicated, sustained budget for this? |
+
+**Your weakest dimension = your biggest MOET compliance gap.**
+
+This is not optional — it's national directive.
+
+---
+
+### SLIDE 10 — AI Tool of the Day: Your Critical Advisor
 
 By default, AI is a **yes-man**. It validates everything you say.
 
@@ -133,7 +153,7 @@ A change professional needs the opposite: someone who **challenges your blind sp
 
 ---
 
-### SLIDE 10 — Your Tasks This Afternoon
+### SLIDE 11 — Your Tasks This Afternoon
 
 **Part 1: Self-Assessment (14:30 – 15:00)**
 1. Open the DIVE platform → Module 1
@@ -157,7 +177,7 @@ A change professional needs the opposite: someone who **challenges your blind sp
 
 ---
 
-### SLIDE 11 — Keep in Mind
+### SLIDE 12 — Keep in Mind
 
 - Be honest, not optimistic — the diagnostic only works if it reflects reality
 - "I don't know" is a perfectly valid answer — it tells us where you lack visibility
