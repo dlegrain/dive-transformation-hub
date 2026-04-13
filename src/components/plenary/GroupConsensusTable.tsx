@@ -66,13 +66,15 @@ export default function GroupConsensusTable({ dark }: Props) {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const validatedGroups = groups.filter((g) => g.consensus_status === 'validated' && g.dimensions);
+  // Only show groups that have started consensus (not "none")
+  const activeGroups = groups.filter((g) => g.consensus_status !== 'none');
+  const validatedGroups = activeGroups.filter((g) => g.consensus_status === 'validated' && g.dimensions);
 
   if (loading) {
     return <p className={`text-sm ${dark ? 'text-gray-500' : 'text-gray-400'} text-center py-4`}>Loading group data...</p>;
   }
 
-  if (groups.length === 0) {
+  if (activeGroups.length === 0) {
     return null;
   }
 
@@ -119,7 +121,7 @@ export default function GroupConsensusTable({ dark }: Props) {
               </tr>
             </thead>
             <tbody>
-              {groups.map((g) => {
+              {activeGroups.map((g) => {
                 const isValidated = g.consensus_status === 'validated';
                 const overall = isValidated && g.dimensions
                   ? DIMENSIONS.reduce((sum, dim) => {
