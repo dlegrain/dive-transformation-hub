@@ -259,6 +259,80 @@ export function detectAlerts(
       });
     });
 
+  // ── MOET Strategy Alerts (Nguyen & Hong, 2025) ──
+
+  // Helper: avg score for a dimension (0 if all unknown)
+  const dimAvg = (key: DimensionKey): number => {
+    const d = dimensions[key];
+    const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
+    return known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : 0;
+  };
+
+  // S1: Infrastructure & Governance → digitalGovernance
+  const govScore = dimAvg('digitalGovernance');
+  if (govScore > 0 && govScore < 1.5) {
+    alerts.push({
+      id: 'moet-s1',
+      message: 'MOET Strategy S1 gap: your Digital Governance score is critically low. National policy requires shared platforms, high-speed connectivity, and cybersecurity protocols as the absolute foundation (Nguyen & Hong, 2025).',
+      severity: 'critical',
+      module: 'module1',
+    });
+  }
+
+  // S2: Equity & Faculty Development → teachingLearning
+  const teachScore = dimAvg('teachingLearning');
+  if (teachScore > 0 && teachScore < 1.5) {
+    alerts.push({
+      id: 'moet-s2',
+      message: 'MOET Strategy S2 gap: your Teaching & Learning score suggests faculty are not trained for digital innovation. MOET requires intensive teacher training — not just for early adopters, for ALL faculty (Nguyen & Hong, 2025).',
+      severity: 'warning',
+      module: 'module1',
+    });
+  }
+
+  // S3: Digital Pedagogy & Administration → academicManagement + administrativeManagement
+  const acadScore = dimAvg('academicManagement');
+  const adminScore = dimAvg('administrativeManagement');
+  if ((acadScore > 0 && acadScore < 1.5) || (adminScore > 0 && adminScore < 1.5)) {
+    const weak = [
+      acadScore > 0 && acadScore < 1.5 ? 'Academic Management' : '',
+      adminScore > 0 && adminScore < 1.5 ? 'Administrative Management' : '',
+    ].filter(Boolean).join(' and ');
+    alerts.push({
+      id: 'moet-s3',
+      message: `MOET Strategy S3 gap: your ${weak} score is low. National policy mandates digitized courses, admin services, and public portals (Nguyen & Hong, 2025).`,
+      severity: 'warning',
+      module: 'module1',
+    });
+  }
+
+  // S4: Strategic Planning & Stakeholders → institutionalImage + universityExtension
+  const imageScore = dimAvg('institutionalImage');
+  const extScore = dimAvg('universityExtension');
+  if ((imageScore > 0 && imageScore < 1.5) && (extScore > 0 && extScore < 1.5)) {
+    alerts.push({
+      id: 'moet-s4',
+      message: 'MOET Strategy S4 gap: both Institutional Image and University Extension scores are low. MOET requires a steering committee with industry and government partners for long-term digital strategy (Nguyen & Hong, 2025).',
+      severity: 'warning',
+      module: 'module1',
+    });
+  }
+
+  // S5: Financing — check if the plan has any budget/financing related task
+  if (tasks.length > 0) {
+    const budgetKeywords = /budget|financ|fund|invest|resource|cost|alloc/i;
+    const hasBudgetTask = tasks.some((t) => budgetKeywords.test(t.name));
+    const hasBudgetKpi = kpis.some((k) => budgetKeywords.test(k.name));
+    if (!hasBudgetTask && !hasBudgetKpi) {
+      alerts.push({
+        id: 'moet-s5',
+        message: 'MOET Strategy S5 gap: your 90-day plan has no financing or budget action. Without guaranteed resource allocation, transformation stalls. Add a budget task or KPI (Nguyen & Hong, 2025).',
+        severity: 'warning',
+        module: 'module4',
+      });
+    }
+  }
+
   // Missing stakeholder roles
   if (stakeholders.length > 0) {
     const mappedRoles = new Set(stakeholders.map((s) => s.role));
