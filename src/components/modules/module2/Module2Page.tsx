@@ -11,7 +11,7 @@ export default function Module2Page() {
   const { data: groupData, refetch: refetchGroup } = useGroupStakeholders(group?.id);
   const validator = useValidator(group?.id, 'module2');
 
-  const hasGroup = groupData && groupData.totalCount > 1;
+  const hasGroup = groupData && groupData.totalCount >= 1;
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -39,7 +39,7 @@ export default function Module2Page() {
       {!hasGroup && (
         <div className="text-center py-12 text-gray-400">
           <Users size={32} className="mx-auto mb-3 opacity-50" />
-          <p className="text-sm">Waiting for your group to be formed (at least 2 members from the same institution).</p>
+          <p className="text-sm">Waiting for your group to be formed.</p>
         </div>
       )}
 
