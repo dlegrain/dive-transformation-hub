@@ -17,6 +17,7 @@ export default function WelcomePage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [institution, setInstitution] = useState('');
+  const [customInstitution, setCustomInstitution] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
 
   // Login form
@@ -24,12 +25,15 @@ export default function WelcomePage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    const finalInstitution = institution === '__other__' ? customInstitution.trim() : institution;
+    if (!finalInstitution) { setError('Please enter your institution name.'); return; }
+
     setError('');
     setLoading(true);
     const result = await registerParticipant({
       firstName,
       lastName,
-      institution,
+      institution: finalInstitution,
       email: registerEmail,
     });
     setLoading(false);
@@ -152,7 +156,18 @@ export default function WelcomePage() {
                   {INSTITUTIONS.map((inst) => (
                     <option key={inst} value={inst}>{inst}</option>
                   ))}
+                  <option value="__other__">Other...</option>
                 </select>
+                {institution === '__other__' && (
+                  <input
+                    type="text"
+                    required
+                    value={customInstitution}
+                    onChange={(e) => setCustomInstitution(e.target.value)}
+                    placeholder="Enter your institution name"
+                    className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
