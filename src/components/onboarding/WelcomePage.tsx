@@ -36,12 +36,11 @@ export default function WelcomePage() {
       setError(result.error);
       return;
     }
-    // Pre-populate store data
-    const storeData = localStorage.getItem('dive-hub-data');
-    const parsed = storeData ? JSON.parse(storeData) : {};
-    parsed.institutionName = result.group.institution_name || institution;
-    parsed.assessorName = result.participant.name;
-    localStorage.setItem('dive-hub-data', JSON.stringify(parsed));
+    // Fresh store for new registration (wipe old data)
+    localStorage.setItem('dive-hub-data', JSON.stringify({
+      institutionName: result.group.institution_name || institution,
+      assessorName: result.participant.name,
+    }));
 
     login(result.participant, result.group, result.session);
     navigate('/survey', { replace: true });
