@@ -223,6 +223,7 @@ export interface AISurvey {
   task_types: string[];
   frequency: AIFrequency;
   paid_vs_free: PaidVsFree;
+  vibe_coding: string | null;
   created_at?: string;
 }
 
