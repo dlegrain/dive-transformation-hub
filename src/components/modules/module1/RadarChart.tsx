@@ -6,6 +6,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
   Tooltip,
+  Legend,
 } from 'recharts';
 import { DIMENSIONS } from '../../../lib/constants';
 import type { DimensionKey, DimensionAssessment, CustomDimension } from '../../../types';
@@ -14,6 +15,11 @@ interface Props {
   dimensions: Record<DimensionKey, DimensionAssessment>;
   customDimensions?: CustomDimension[];
   hiddenDimensions?: DimensionKey[];
+  /** Optional second dataset for overlay comparison (e.g., group average) */
+  comparisonDimensions?: Record<DimensionKey, DimensionAssessment> | null;
+  comparisonLabel?: string;
+  /** Label for the primary dataset */
+  primaryLabel?: string;
 }
 
 function computeScore(assessment: DimensionAssessment) {
@@ -25,16 +31,26 @@ function computeScore(assessment: DimensionAssessment) {
   };
 }
 
-export default function RadarChart({ dimensions, customDimensions = [], hiddenDimensions = [] }: Props) {
+export default function RadarChart({
+  dimensions,
+  customDimensions = [],
+  hiddenDimensions = [],
+  comparisonDimensions,
+  comparisonLabel = 'Group Average',
+  primaryLabel = 'My Assessment',
+}: Props) {
   // Standard dimensions (not hidden)
   const standardData = DIMENSIONS
     .filter((dim) => !hiddenDimensions.includes(dim.key))
     .map((dim) => {
       const { score, hasUnknowns } = computeScore(dimensions[dim.key]);
+      const comparison = comparisonDimensions?.[dim.key];
+      const compScore = comparison ? computeScore(comparison).score : undefined;
       return {
         dimension: dim.label,
         score,
         hasUnknowns,
+        comparison: compScore ?? undefined,
         fullMark: 3,
       };
     });
@@ -48,11 +64,13 @@ export default function RadarChart({ dimensions, customDimensions = [], hiddenDi
         dimension: cd.label,
         score,
         hasUnknowns,
+        comparison: undefined as number | undefined,
         fullMark: 3,
       };
     });
 
   const data = [...standardData, ...customData];
+  const hasComparison = !!comparisonDimensions;
 
   const chartData = data.map((d) => ({
     ...d,
@@ -108,13 +126,25 @@ export default function RadarChart({ dimensions, customDimensions = [], hiddenDi
             }}
           />
           <Radar
-            name="Maturity"
+            name={hasComparison ? primaryLabel : 'Maturity'}
             dataKey="score"
             stroke="#2563eb"
             fill="#3b82f6"
-            fillOpacity={0.25}
+            fillOpacity={hasComparison ? 0.15 : 0.25}
             strokeWidth={2}
           />
+          {hasComparison && (
+            <Radar
+              name={comparisonLabel}
+              dataKey="comparison"
+              stroke="#f97316"
+              fill="#fb923c"
+              fillOpacity={0.15}
+              strokeWidth={2}
+              strokeDasharray="5 5"
+            />
+          )}
+          {hasComparison && <Legend wrapperStyle={{ fontSize: 12 }} />}
         </RechartsRadarChart>
       </ResponsiveContainer>
 

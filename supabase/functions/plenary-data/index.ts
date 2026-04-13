@@ -37,10 +37,11 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch all assessments
+    // Fetch individual assessments only (exclude consensus rows)
     const { data: assessments, error: assErr } = await supabase
       .from("dive_assessments")
-      .select("*");
+      .select("*")
+      .or("is_consensus.is.null,is_consensus.eq.false");
     if (assErr) throw assErr;
 
     // Aggregate dimension averages across all participants

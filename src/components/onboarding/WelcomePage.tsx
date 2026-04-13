@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth-context';
 import { registerParticipant, findParticipantByEmail } from '../../lib/participant';
+import { INSTITUTIONS } from '../../lib/constants';
 
 type Tab = 'register' | 'login';
 
@@ -141,14 +142,17 @@ export default function WelcomePage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Institution</label>
-                <input
-                  type="text"
+                <select
                   required
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                  placeholder="Ho Chi Minh City University of Technology"
-                />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
+                >
+                  <option value="">Select your institution...</option>
+                  {INSTITUTIONS.map((inst) => (
+                    <option key={inst} value={inst}>{inst}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>

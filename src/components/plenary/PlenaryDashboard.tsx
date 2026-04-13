@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import GroupConsensusTable from './GroupConsensusTable';
 import {
   DIMENSIONS,
   RESISTANCE_BEHAVIORS,
@@ -468,50 +469,60 @@ function MaturityTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
   };
 
   if (scored.length === 0) {
-    return <EmptyState message="No maturity data collected yet. Waiting for participants..." dark={dark} />;
+    return (
+      <>
+        <EmptyState message="No maturity data collected yet. Waiting for participants..." dark={dark} />
+        <GroupConsensusTable dark={dark} />
+      </>
+    );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Radar */}
-      <Card title={`Group Maturity Radar (${participantCount} participant${participantCount !== 1 ? 's' : ''})`} dark={dark}>
-        <ResponsiveContainer width="100%" height={350}>
-          <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-            <PolarGrid stroke={dark ? '#374151' : '#e5e7eb'} />
-            <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
-            <PolarRadiusAxis angle={90} domain={[0, 3]} tickCount={4} tick={{ fontSize: 10, fill: dark ? '#6b7280' : '#9ca3af' }} />
-            <Tooltip formatter={(value) => [Number(value).toFixed(1), 'Avg Score']} contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <Radar name="Group Average" dataKey="score" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.25} strokeWidth={2} />
-          </RadarChart>
-        </ResponsiveContainer>
-      </Card>
-
-      {/* Key stats */}
-      <div className="space-y-6">
-        <Card title="Key Metrics" dark={dark}>
-          <div className="grid grid-cols-3 gap-3">
-            <StatBox label="Overall Score" value={overallAvg.toFixed(1) + ' / 3.0'} color={getColor(overallAvg)} dark={dark} />
-            <StatBox label="Strongest" value={strongest[0]?.name || '—'} color="#22c55e" dark={dark} />
-            <StatBox label="Weakest" value={weakest[0]?.name || '—'} color="#ef4444" dark={dark} />
-          </div>
-        </Card>
-
-        <Card title="Sub-criteria Breakdown (Averages)" dark={dark}>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#374151' : '#f3f4f6'} />
-              <XAxis type="number" domain={[0, 3]} tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} width={120} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-              <Bar dataKey="tools" name="Tools" fill="#3b82f6" barSize={6} radius={[0, 2, 2, 0]} />
-              <Bar dataKey="data" name="Data" fill="#f59e0b" barSize={6} radius={[0, 2, 2, 0]} />
-              <Bar dataKey="culture" name="Culture" fill="#22c55e" barSize={6} radius={[0, 2, 2, 0]} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-            </BarChart>
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Radar */}
+        <Card title={`Individual Averages (${participantCount} participant${participantCount !== 1 ? 's' : ''})`} dark={dark}>
+          <ResponsiveContainer width="100%" height={350}>
+            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+              <PolarGrid stroke={dark ? '#374151' : '#e5e7eb'} />
+              <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
+              <PolarRadiusAxis angle={90} domain={[0, 3]} tickCount={4} tick={{ fontSize: 10, fill: dark ? '#6b7280' : '#9ca3af' }} />
+              <Tooltip formatter={(value) => [Number(value).toFixed(1), 'Avg Score']} contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+              <Radar name="Group Average" dataKey="score" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.25} strokeWidth={2} />
+            </RadarChart>
           </ResponsiveContainer>
         </Card>
+
+        {/* Key stats */}
+        <div className="space-y-6">
+          <Card title="Key Metrics" dark={dark}>
+            <div className="grid grid-cols-3 gap-3">
+              <StatBox label="Overall Score" value={overallAvg.toFixed(1) + ' / 3.0'} color={getColor(overallAvg)} dark={dark} />
+              <StatBox label="Strongest" value={strongest[0]?.name || '—'} color="#22c55e" dark={dark} />
+              <StatBox label="Weakest" value={weakest[0]?.name || '—'} color="#ef4444" dark={dark} />
+            </div>
+          </Card>
+
+          <Card title="Sub-criteria Breakdown (Averages)" dark={dark}>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#374151' : '#f3f4f6'} />
+                <XAxis type="number" domain={[0, 3]} tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} width={120} />
+                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                <Bar dataKey="tools" name="Tools" fill="#3b82f6" barSize={6} radius={[0, 2, 2, 0]} />
+                <Bar dataKey="data" name="Data" fill="#f59e0b" barSize={6} radius={[0, 2, 2, 0]} />
+                <Bar dataKey="culture" name="Culture" fill="#22c55e" barSize={6} radius={[0, 2, 2, 0]} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
       </div>
-    </div>
+
+      {/* Group Consensus Comparison */}
+      <GroupConsensusTable dark={dark} />
+    </>
   );
 }
 

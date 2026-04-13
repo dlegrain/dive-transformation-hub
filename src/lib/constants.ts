@@ -67,6 +67,23 @@ export const MATURITY_LEVELS = [
 ] as const;
 
 // ============================================================
+// Institutions (fixed list for registration dropdown)
+// ============================================================
+
+export const INSTITUTIONS = [
+  'National Economics University',
+  'Tay Nguyen University',
+  'Can Tho University',
+  'University of Technology and Education - The University of Danang',
+  'University of Economics and Law',
+  'Ho Chi Minh City Open University',
+  'University of Agriculture and Forestry - Hue University',
+  'Nha Trang University',
+  'Thai Nguyen University of Education',
+  'Industrial University of Vinh',
+] as const;
+
+// ============================================================
 // Module 2: Resistance taxonomy
 // ============================================================
 

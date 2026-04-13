@@ -163,11 +163,37 @@ export interface Session {
   created_at?: string;
 }
 
+export type ConsensusStatus = 'none' | 'draft' | 'validated' | 'reopen_requested' | 'reopened';
+
+export interface GroupMemberStatus {
+  id: string;
+  name: string;
+  has_completed: boolean;
+}
+
+export interface GroupAssessmentData {
+  members: GroupMemberStatus[];
+  groupAverage: Record<DimensionKey, DimensionAssessment> | null;
+  consensus: {
+    dimensions: Record<DimensionKey, DimensionAssessment>;
+    customDimensions: CustomDimension[];
+    hiddenDimensions: DimensionKey[];
+    updated_at?: string;
+  } | null;
+  consensusStatus: ConsensusStatus;
+  completedCount: number;
+  totalCount: number;
+  validatedByName?: string | null;
+  reopenRequestedByName?: string | null;
+}
+
 export interface Group {
   id: string;
   session_id: string;
   name: string;
   institution_name?: string;
+  consensus_status?: ConsensusStatus;
+  consensus_validated_at?: string;
   created_at?: string;
 }
 

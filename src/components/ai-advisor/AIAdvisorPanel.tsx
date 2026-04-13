@@ -35,7 +35,7 @@ export default function AIAdvisorPanel() {
   const messages = store.aiMessages[currentModule] || [];
 
   const alerts = detectAlerts(
-    store.dimensions,
+    store.effectiveDimensions,
     store.stakeholders,
     store.solutions,
     store.tasks,
@@ -67,13 +67,13 @@ export default function AIAdvisorPanel() {
       const systemPrompt = buildSystemPrompt(
         MODULE_LABELS[currentModule] || 'General',
         store.institutionName,
-        store.dimensions,
+        store.effectiveDimensions,
         store.stakeholders,
         store.solutions,
         store.tasks,
         store.kpis,
-        store.hiddenDimensions,
-        store.customDimensions,
+        store.effectiveHiddenDimensions,
+        store.effectiveCustomDimensions,
       );
 
       const conversationMessages = [...messages, userMessage].map((m) => ({

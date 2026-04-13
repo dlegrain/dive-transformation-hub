@@ -8,6 +8,7 @@ import type {
   PlanTask,
   KPI,
   AIMessage,
+  ConsensusStatus,
 } from '../types';
 import {
   sampleDimensions,
@@ -46,6 +47,11 @@ interface PersistedState {
   tasks: PlanTask[];
   kpis: KPI[];
   aiMessages: Record<string, AIMessage[]>;
+  // Consensus
+  consensusDimensions: Record<DimensionKey, DimensionAssessment> | null;
+  consensusCustomDimensions: CustomDimension[];
+  consensusHiddenDimensions: DimensionKey[];
+  consensusStatus: ConsensusStatus;
 }
 
 function loadFromStorage(): Partial<PersistedState> {
@@ -95,6 +101,21 @@ interface AppStore {
   aiMessages: Record<string, AIMessage[]>; // keyed by module
   addAIMessage: (module: string, message: AIMessage) => void;
 
+  // Consensus
+  consensusDimensions: Record<DimensionKey, DimensionAssessment> | null;
+  setConsensusDimensions: (dims: Record<DimensionKey, DimensionAssessment> | null) => void;
+  consensusCustomDimensions: CustomDimension[];
+  setConsensusCustomDimensions: React.Dispatch<React.SetStateAction<CustomDimension[]>>;
+  consensusHiddenDimensions: DimensionKey[];
+  setConsensusHiddenDimensions: React.Dispatch<React.SetStateAction<DimensionKey[]>>;
+  consensusStatus: ConsensusStatus;
+  setConsensusStatus: (status: ConsensusStatus) => void;
+
+  // Computed: returns consensus data when validated, otherwise individual
+  effectiveDimensions: Record<DimensionKey, DimensionAssessment>;
+  effectiveCustomDimensions: CustomDimension[];
+  effectiveHiddenDimensions: DimensionKey[];
+
   // Admin
   fillSampleData: () => void;
   resetAll: () => void;
@@ -115,6 +136,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<PlanTask[]>(saved.tasks || []);
   const [kpis, setKpis] = useState<KPI[]>(saved.kpis || []);
   const [aiMessages, setAiMessages] = useState<Record<string, AIMessage[]>>(saved.aiMessages || {});
+  const [consensusDimensions, setConsensusDimensions] = useState<Record<DimensionKey, DimensionAssessment> | null>(saved.consensusDimensions || null);
+  const [consensusCustomDimensions, setConsensusCustomDimensions] = useState<CustomDimension[]>(saved.consensusCustomDimensions || []);
+  const [consensusHiddenDimensions, setConsensusHiddenDimensions] = useState<DimensionKey[]>(saved.consensusHiddenDimensions || []);
+  const [consensusStatus, setConsensusStatus] = useState<ConsensusStatus>(saved.consensusStatus || 'none');
+
+  // Computed: use consensus when validated, otherwise individual
+  const isConsensusActive = consensusStatus === 'validated' && consensusDimensions !== null;
+  const effectiveDimensions = isConsensusActive ? consensusDimensions : dimensions;
+  const effectiveCustomDimensions = isConsensusActive ? consensusCustomDimensions : customDimensions;
+  const effectiveHiddenDimensions = isConsensusActive ? consensusHiddenDimensions : hiddenDimensions;
 
   const setDimension = (key: DimensionKey, sub: 'tools' | 'data' | 'culture', value: 0 | 1 | 2 | 3) => {
     setDimensions((prev) => ({
@@ -151,12 +182,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setTasks([]);
     setKpis([]);
     setAiMessages({});
+    setConsensusDimensions(null);
+    setConsensusCustomDimensions([]);
+    setConsensusHiddenDimensions([]);
+    setConsensusStatus('none');
   };
 
   // Persist to localStorage on every state change
   const persist = useCallback(() => {
-    saveToStorage({ institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages });
-  }, [institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages]);
+    saveToStorage({ institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus });
+  }, [institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus]);
 
   useEffect(() => {
     persist();
@@ -175,6 +210,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         tasks, setTasks,
         kpis, setKpis,
         aiMessages, addAIMessage,
+        consensusDimensions, setConsensusDimensions,
+        consensusCustomDimensions, setConsensusCustomDimensions,
+        consensusHiddenDimensions, setConsensusHiddenDimensions,
+        consensusStatus, setConsensusStatus,
+        effectiveDimensions, effectiveCustomDimensions, effectiveHiddenDimensions,
         fillSampleData, resetAll,
       }}
     >

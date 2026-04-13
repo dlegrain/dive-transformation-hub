@@ -38,7 +38,7 @@ function scoreColor(score: number): string {
 
 function generateRecommendations(store: ReturnType<typeof useStore>): string[] {
   const recs: string[] = [];
-  const dims = store.dimensions;
+  const dims = store.effectiveDimensions;
   const weakDims = DIMENSIONS.filter((d) => dimAvg(dims[d.key]) < 1.5);
   const overall = overallScore(dims);
 
@@ -276,15 +276,18 @@ export default function ExportPage() {
   const [isExporting, setIsExporting] = useState(false);
   const navigate = useNavigate();
 
+  const dims = store.effectiveDimensions;
+  const isConsensus = store.consensusStatus === 'validated';
+
   const radarData = DIMENSIONS.map((dim) => ({
     dimension: dim.label,
-    score: dimAvg(store.dimensions[dim.key]),
+    score: dimAvg(dims[dim.key]),
     fullMark: 3,
   }));
 
-  const overall = overallScore(store.dimensions);
-  const weakDims = DIMENSIONS.filter((d) => dimAvg(store.dimensions[d.key]) < 1.5);
-  const alerts = detectAlerts(store.dimensions, store.stakeholders, store.solutions, store.tasks, store.kpis);
+  const overall = overallScore(dims);
+  const weakDims = DIMENSIONS.filter((d) => dimAvg(dims[d.key]) < 1.5);
+  const alerts = detectAlerts(dims, store.stakeholders, store.solutions, store.tasks, store.kpis);
   const recommendations = generateRecommendations(store);
 
   const handleExport = useCallback(async () => {
@@ -396,7 +399,9 @@ export default function ExportPage() {
         {/* ========== MODULE 1: MATURITY DIAGNOSTIC ========== */}
         <div style={styles.pageBreak}>
           <div style={styles.section}>
-            <div style={styles.sectionTitle}>1. Maturity Diagnostic</div>
+            <div style={styles.sectionTitle}>
+              1. Maturity Diagnostic{isConsensus ? ' (Group Consensus)' : ''}
+            </div>
 
             {/* Radar chart */}
             <div style={{ width: '100%', height: '320px', marginBottom: '16px' }}>
@@ -431,7 +436,7 @@ export default function ExportPage() {
               </thead>
               <tbody>
                 {DIMENSIONS.map((dim) => {
-                  const d = store.dimensions[dim.key];
+                  const d = dims[dim.key];
                   const avg = dimAvg(d);
                   return (
                     <tr key={dim.key}>
@@ -452,7 +457,7 @@ export default function ExportPage() {
                 <div style={styles.sectionSubtitle}>Key Weaknesses</div>
                 {weakDims.map((dim) => (
                   <div key={dim.key} style={styles.alertBox}>
-                    <strong>{dim.label}</strong> scores {dimAvg(store.dimensions[dim.key]).toFixed(1)}/3 — this dimension should be a priority in your 90-day plan.
+                    <strong>{dim.label}</strong> scores {dimAvg(dims[dim.key]).toFixed(1)}/3 — this dimension should be a priority in your 90-day plan.
                   </div>
                 ))}
               </>

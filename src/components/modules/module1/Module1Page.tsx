@@ -1,8 +1,13 @@
-import { Plus, EyeOff } from 'lucide-react';
+import { Plus, EyeOff, Users, Handshake } from 'lucide-react';
 import DimensionForm from './DimensionForm';
 import CustomDimensionForm from './CustomDimensionForm';
 import RadarChart from './RadarChart';
+import GroupComparisonOverlay from './GroupComparisonOverlay';
+import ConsensusForm from './ConsensusForm';
+import ConsensusStatusBadge from './ConsensusStatusBadge';
 import { useStore } from '../../../lib/store';
+import { useAuth } from '../../../lib/auth-context';
+import { useGroupData } from '../../../lib/use-group-data';
 import { DIMENSIONS } from '../../../lib/constants';
 import type { DimensionKey } from '../../../types';
 
@@ -14,6 +19,9 @@ export default function Module1Page() {
     institutionName, setInstitutionName,
     assessorName, setAssessorName,
   } = useStore();
+
+  const { group } = useAuth();
+  const { data: groupData, refetch } = useGroupData(group?.id);
 
   const handleAddCustom = () => {
     setCustomDimensions((prev) => [
@@ -48,6 +56,9 @@ export default function Module1Page() {
         <div className="flex items-center gap-2 text-xs text-primary-600 font-medium mb-1">
           <span className="bg-primary-100 px-2 py-0.5 rounded">Day 1</span>
           Module 1
+          {(groupData?.consensusStatus && groupData.consensusStatus !== 'none') && (
+            <ConsensusStatusBadge status={groupData.consensusStatus} />
+          )}
         </div>
         <h2 className="text-2xl font-bold text-gray-900">
           Maturity Diagnostic
@@ -195,6 +206,49 @@ export default function Module1Page() {
           </div>
         </div>
       </div>
+      {/* ─── Phase 2: Group Comparison ─────────────────────────── */}
+      {groupData && groupData.totalCount > 1 && (
+        <>
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Users size={16} className="text-primary-600" />
+              <h2 className="text-lg font-bold text-gray-900">
+                Phase 2 — Group Comparison
+              </h2>
+            </div>
+            <p className="text-gray-500 text-sm">
+              See how your individual assessment compares to your group's anonymous average.
+            </p>
+          </div>
+          <GroupComparisonOverlay
+            groupData={groupData}
+            personalDimensions={dimensions}
+            customDimensions={customDimensions}
+            hiddenDimensions={hiddenDimensions}
+          />
+        </>
+      )}
+
+      {/* ─── Phase 3: Group Consensus ──────────────────────────── */}
+      {groupData && groupData.totalCount > 1 && (
+        groupData.completedCount === groupData.totalCount || groupData.consensusStatus !== 'none'
+      ) && (
+        <>
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Handshake size={16} className="text-primary-600" />
+              <h2 className="text-lg font-bold text-gray-900">
+                Phase 3 — Group Consensus
+              </h2>
+            </div>
+            <p className="text-gray-500 text-sm">
+              Discuss with your group and agree on a single shared diagnostic.
+              This will be used by Modules 2, 3, and 4.
+            </p>
+          </div>
+          <ConsensusForm groupData={groupData} onRefetch={refetch} />
+        </>
+      )}
     </div>
   );
 }
