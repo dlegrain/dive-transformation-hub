@@ -20,8 +20,15 @@ ALTER TABLE dive_kpis
 
 -- dive_assessments: add UNIQUE constraint on participant_id for upsert
 -- (one assessment per participant)
-ALTER TABLE dive_assessments
-  ADD CONSTRAINT dive_assessments_participant_id_unique UNIQUE (participant_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'dive_assessments_participant_id_unique'
+  ) THEN
+    ALTER TABLE dive_assessments
+      ADD CONSTRAINT dive_assessments_participant_id_unique UNIQUE (participant_id);
+  END IF;
+END $$;
 
 -- Permissive RLS for service-role bypass is automatic,
 -- but add anon policies so the Edge Functions (using service role) work,
