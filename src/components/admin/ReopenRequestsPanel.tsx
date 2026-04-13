@@ -6,6 +6,9 @@ interface ReopenRequest {
   group_id: string;
   group_name: string;
   institution_name: string;
+  module: string;
+  approve_action: string;
+  deny_action: string;
   requester_name: string | null;
   requested_at: string | null;
 }
@@ -41,16 +44,16 @@ export default function ReopenRequestsPanel({ onClose }: Props) {
     return () => clearInterval(interval);
   }, [fetchRequests]);
 
-  const handleApprove = async (groupId: string) => {
+  const handleApprove = async (groupId: string, action: string) => {
     await supabase.functions.invoke('group-data', {
-      body: { action: 'approve_reopen', group_id: groupId },
+      body: { action, group_id: groupId },
     });
     fetchRequests();
   };
 
-  const handleDeny = async (groupId: string) => {
+  const handleDeny = async (groupId: string, action: string) => {
     await supabase.functions.invoke('group-data', {
-      body: { action: 'deny_reopen', group_id: groupId },
+      body: { action, group_id: groupId },
     });
     fetchRequests();
   };
@@ -72,14 +75,17 @@ export default function ReopenRequestsPanel({ onClose }: Props) {
             <p className="text-sm text-gray-400 text-center py-6">No pending requests.</p>
           ) : (
             <div className="space-y-3">
-              {requests.map((req) => (
+              {requests.map((req, i) => (
                 <div
-                  key={req.group_id}
+                  key={`${req.group_id}-${req.module}-${i}`}
                   className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg"
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
                       {req.institution_name || req.group_name}
+                      <span className="ml-2 text-[10px] text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded font-semibold">
+                        {req.module}
+                      </span>
                     </p>
                     <p className="text-xs text-gray-500">
                       Requested by {req.requester_name || 'Unknown'}
@@ -90,14 +96,14 @@ export default function ReopenRequestsPanel({ onClose }: Props) {
                   </div>
                   <div className="flex gap-1.5">
                     <button
-                      onClick={() => handleApprove(req.group_id)}
+                      onClick={() => handleApprove(req.group_id, req.approve_action)}
                       className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-colors"
                     >
                       <Check size={12} />
                       Approve
                     </button>
                     <button
-                      onClick={() => handleDeny(req.group_id)}
+                      onClick={() => handleDeny(req.group_id, req.deny_action)}
                       className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded transition-colors"
                     >
                       <XCircle size={12} />

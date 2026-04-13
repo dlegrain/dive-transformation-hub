@@ -57,7 +57,7 @@ function generateRecommendations(store: ReturnType<typeof useStore>): string[] {
   }
 
   // Displacement anxiety present
-  const hasDisplacement = store.stakeholders.some((s) => s.anxiety === 'displacement');
+  const hasDisplacement = store.effectiveStakeholders.some((s) => s.anxiety === 'displacement');
   if (hasDisplacement) {
     recs.push(
       `Displacement anxiety detected among stakeholders. This is the hardest anxiety to address. Frame AI as augmentation, not replacement. Provide career orientation sessions and demonstrate how AI frees time for higher-value tasks (Cao et al., 2026).`
@@ -65,7 +65,7 @@ function generateRecommendations(store: ReturnType<typeof useStore>): string[] {
   }
 
   // Subtle resistance
-  const subtleCount = store.stakeholders.filter(
+  const subtleCount = store.effectiveStakeholders.filter(
     (s) => s.behavior === 'subtle_undermining' || s.behavior === 'subtle_avoiding'
   ).length;
   if (subtleCount > 0) {
@@ -75,7 +75,7 @@ function generateRecommendations(store: ReturnType<typeof useStore>): string[] {
   }
 
   // Professor-specific
-  const profStakeholders = store.stakeholders.filter((s) => s.role === 'Professors');
+  const profStakeholders = store.effectiveStakeholders.filter((s) => s.role === 'Professors');
   if (profStakeholders.length > 0) {
     recs.push(
       `For professors: avoid public demonstrations and top-down mandates. Academics evaluate tools privately. Offer risk-free, individual experimentation with immediate time savings on their specific tasks (Singh & Strzelecki, 2026).`
@@ -287,7 +287,7 @@ export default function ExportPage() {
 
   const overall = overallScore(dims);
   const weakDims = DIMENSIONS.filter((d) => dimAvg(dims[d.key]) < 1.5);
-  const alerts = detectAlerts(dims, store.stakeholders, store.solutions, store.tasks, store.kpis);
+  const alerts = detectAlerts(dims, store.effectiveStakeholders, store.solutions, store.tasks, store.kpis);
   const recommendations = generateRecommendations(store);
 
   const handleExport = useCallback(async () => {
@@ -470,7 +470,7 @@ export default function ExportPage() {
           <div style={styles.section}>
             <div style={styles.sectionTitle}>2. Resistance Map</div>
 
-            {store.stakeholders.length === 0 ? (
+            {store.effectiveStakeholders.length === 0 ? (
               <div style={{ color: '#9ca3af', fontStyle: 'italic', padding: '20px 0' }}>
                 No stakeholders have been mapped yet.
               </div>
@@ -479,18 +479,18 @@ export default function ExportPage() {
                 {/* Summary stats */}
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                   <div style={{ background: '#f3f4f6', borderRadius: '6px', padding: '8px 14px', flex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#374151' }}>{store.stakeholders.length}</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#374151' }}>{store.effectiveStakeholders.length}</div>
                     <div style={{ fontSize: '9px', color: '#6b7280' }}>Total Stakeholders</div>
                   </div>
                   <div style={{ background: '#fef3c7', borderRadius: '6px', padding: '8px 14px', flex: 1, textAlign: 'center' }}>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#92400e' }}>
-                      {store.stakeholders.filter((s) => s.behavior === 'subtle_undermining' || s.behavior === 'subtle_avoiding').length}
+                      {store.effectiveStakeholders.filter((s) => s.behavior === 'subtle_undermining' || s.behavior === 'subtle_avoiding').length}
                     </div>
                     <div style={{ fontSize: '9px', color: '#92400e' }}>Subtle Resistance</div>
                   </div>
                   <div style={{ background: '#dcfce7', borderRadius: '6px', padding: '8px 14px', flex: 1, textAlign: 'center' }}>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#166534' }}>
-                      {store.stakeholders.filter((s) => s.anxiety === 'ethical_engagement').length}
+                      {store.effectiveStakeholders.filter((s) => s.anxiety === 'ethical_engagement').length}
                     </div>
                     <div style={{ fontSize: '9px', color: '#166534' }}>Potential Allies</div>
                   </div>
@@ -508,7 +508,7 @@ export default function ExportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {store.stakeholders.map((s, i) => (
+                    {store.effectiveStakeholders.map((s, i) => (
                       <tr key={i}>
                         <td style={{ ...styles.td, fontWeight: 500 }}>{s.name}</td>
                         <td style={styles.td}>
@@ -530,7 +530,7 @@ export default function ExportPage() {
 
                 {/* Counter-measures */}
                 <div style={styles.sectionSubtitle}>Generated Counter-Measures</div>
-                {store.stakeholders.map((s, i) => (
+                {store.effectiveStakeholders.map((s, i) => (
                   <div key={i} style={{ marginBottom: '10px', padding: '8px 12px', background: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                     <div style={{ fontSize: '11px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
                       {s.name} ({s.role})

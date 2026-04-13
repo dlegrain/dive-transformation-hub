@@ -1,12 +1,22 @@
 import { useState } from 'react';
-import { Plus, Trash2, AlertTriangle, Shield } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Shield, Users, Handshake } from 'lucide-react';
 import { RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, STAKEHOLDER_ROLES, DISCIPLINES, POWER_LEVELS, INTEREST_LEVELS } from '../../../lib/constants';
 import { generateCounterMeasure } from '../../../lib/counter-measures';
 import { useStore } from '../../../lib/store';
+import { useAuth } from '../../../lib/auth-context';
+import { useGroupStakeholders } from '../../../lib/use-group-stakeholders';
+import { useValidator } from '../../../lib/use-validator';
+import M2GroupComparison from './M2GroupComparison';
+import M2ConsensusForm from './M2ConsensusForm';
+import ValidatorPicker from '../../shared/ValidatorPicker';
+import ConsensusStatusBadge from '../module1/ConsensusStatusBadge';
 import type { ResistanceBehavior, AnxietyType, MissingLever, StakeholderRole, Discipline, PowerLevel, InterestLevel } from '../../../types';
 
 export default function Module2Page() {
   const { stakeholders, setStakeholders } = useStore();
+  const { participant, group } = useAuth();
+  const { data: groupData, refetch: refetchGroup } = useGroupStakeholders(group?.id);
+  const validator = useValidator(group?.id, 'module2');
   const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
@@ -56,6 +66,9 @@ export default function Module2Page() {
         <div className="flex items-center gap-2 text-xs text-primary-600 font-medium mb-1">
           <span className="bg-primary-100 px-2 py-0.5 rounded">Day 2</span>
           Module 2
+          {(groupData?.consensusStatus && groupData.consensusStatus !== 'none') && (
+            <ConsensusStatusBadge status={groupData.consensusStatus} />
+          )}
         </div>
         <h2 className="text-2xl font-bold text-gray-900">
           Human Resistance Mapping
@@ -375,6 +388,64 @@ export default function Module2Page() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── Phase 2: Group Comparison ─────────────────────────── */}
+      {groupData && groupData.totalCount > 1 && (
+        <>
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Users size={16} className="text-primary-600" />
+              <h2 className="text-lg font-bold text-gray-900">
+                Phase 2 — Group Comparison
+              </h2>
+            </div>
+            <p className="text-gray-500 text-sm">
+              See how your group members mapped their stakeholders. Compare and discuss before building your consensus.
+            </p>
+          </div>
+          <M2GroupComparison groupData={groupData} />
+        </>
+      )}
+
+      {/* ─── Phase 3: Group Consensus ──────────────────────────── */}
+      {groupData && groupData.totalCount > 1 && (
+        groupData.completedCount === groupData.totalCount || groupData.consensusStatus !== 'none'
+      ) && (
+        <>
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Handshake size={16} className="text-primary-600" />
+              <h2 className="text-lg font-bold text-gray-900">
+                Phase 3 — Group Consensus
+              </h2>
+            </div>
+            <p className="text-gray-500 text-sm">
+              Agree on a single shared stakeholder mapping for your institution. The validator edits; others discuss.
+            </p>
+          </div>
+
+          <ValidatorPicker
+            members={groupData.members}
+            currentParticipantId={participant?.id || ''}
+            validatorId={validator.validatorId}
+            validatorName={validator.validatorName}
+            loading={validator.loading}
+            onClaim={validator.claim}
+            onRelease={validator.release}
+            moduleName="Module 2"
+          />
+
+          {validator.validatorId && (
+            <div className="mt-4">
+              <M2ConsensusForm
+                groupData={groupData}
+                isValidator={validator.validatorId === participant?.id}
+                onRefetch={refetchGroup}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -194,7 +194,19 @@ export interface Group {
   institution_name?: string;
   consensus_status?: ConsensusStatus;
   consensus_validated_at?: string;
+  m2_consensus_status?: ConsensusStatus;
+  m2_consensus_validated_at?: string;
   created_at?: string;
+}
+
+export interface GroupStakeholderData {
+  members: GroupMemberStatus[];
+  individualStakeholders: (Stakeholder & { participant_name: string })[];
+  consensusStakeholders: Stakeholder[];
+  consensusStatus: ConsensusStatus;
+  validatorId: string | null;
+  completedCount: number;
+  totalCount: number;
 }
 
 export interface Participant {

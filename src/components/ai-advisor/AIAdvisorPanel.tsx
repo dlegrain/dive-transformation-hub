@@ -36,7 +36,7 @@ export default function AIAdvisorPanel() {
 
   const alerts = detectAlerts(
     store.effectiveDimensions,
-    store.stakeholders,
+    store.effectiveStakeholders,
     store.solutions,
     store.tasks,
     store.kpis,
@@ -68,7 +68,7 @@ export default function AIAdvisorPanel() {
         MODULE_LABELS[currentModule] || 'General',
         store.institutionName,
         store.effectiveDimensions,
-        store.stakeholders,
+        store.effectiveStakeholders,
         store.solutions,
         store.tasks,
         store.kpis,

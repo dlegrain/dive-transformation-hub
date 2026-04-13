@@ -341,34 +341,340 @@ Deno.serve(async (req) => {
 
     // ── GET REOPEN REQUESTS (admin) ────────────────────────────
     if (action === "get_reopen_requests") {
-      const { data: groups, error } = await supabase
+      // M1 reopen requests
+      const { data: m1Groups, error: m1Err } = await supabase
         .from("dive_groups")
         .select("id, name, institution_name, reopen_requested_by, reopen_requested_at")
         .eq("consensus_status", "reopen_requested");
-      if (error) throw error;
+      if (m1Err) throw m1Err;
 
-      // Fetch requester names
+      // M2 reopen requests
+      const { data: m2Groups, error: m2Err } = await supabase
+        .from("dive_groups")
+        .select("id, name, institution_name, m2_reopen_requested_by, m2_reopen_requested_at")
+        .eq("m2_consensus_status", "reopen_requested");
+      if (m2Err) throw m2Err;
+
       const requests = [];
-      for (const g of groups || []) {
+
+      for (const g of m1Groups || []) {
         let requesterName = null;
         if (g.reopen_requested_by) {
-          const { data: p } = await supabase
-            .from("dive_participants")
-            .select("name")
-            .eq("id", g.reopen_requested_by)
-            .single();
+          const { data: p } = await supabase.from("dive_participants").select("name").eq("id", g.reopen_requested_by).single();
           requesterName = p?.name || null;
         }
         requests.push({
           group_id: g.id,
           group_name: g.name,
           institution_name: g.institution_name,
+          module: "Module 1",
+          approve_action: "approve_reopen",
+          deny_action: "deny_reopen",
           requester_name: requesterName,
           requested_at: g.reopen_requested_at,
         });
       }
 
+      for (const g of m2Groups || []) {
+        let requesterName = null;
+        if (g.m2_reopen_requested_by) {
+          const { data: p } = await supabase.from("dive_participants").select("name").eq("id", g.m2_reopen_requested_by).single();
+          requesterName = p?.name || null;
+        }
+        requests.push({
+          group_id: g.id,
+          group_name: g.name,
+          institution_name: g.institution_name,
+          module: "Module 2",
+          approve_action: "approve_m2_reopen",
+          deny_action: "deny_m2_reopen",
+          requester_name: requesterName,
+          requested_at: g.m2_reopen_requested_at,
+        });
+      }
+
       return new Response(JSON.stringify({ requests }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── CLAIM VALIDATOR ─────────────────────────────────────────
+    if (action === "claim_validator") {
+      const { group_id, module, participant_id } = body;
+      if (!group_id || !module || !participant_id) throw new Error("group_id, module, participant_id required");
+
+      // Check if already claimed
+      const { data: existing } = await supabase
+        .from("dive_validators")
+        .select("id, participant_id")
+        .eq("group_id", group_id)
+        .eq("module", module)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        // Already claimed — return current validator
+        return new Response(JSON.stringify({ ok: false, already_claimed: true, validator_id: existing[0].participant_id }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error } = await supabase.from("dive_validators").insert({
+        group_id,
+        module,
+        participant_id,
+      });
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── RELEASE VALIDATOR ──────────────────────────────────────
+    if (action === "release_validator") {
+      const { group_id, module } = body;
+      if (!group_id || !module) throw new Error("group_id and module required");
+
+      const { error } = await supabase
+        .from("dive_validators")
+        .delete()
+        .eq("group_id", group_id)
+        .eq("module", module);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── GET VALIDATOR ──────────────────────────────────────────
+    if (action === "get_validator") {
+      const { group_id, module } = body;
+      if (!group_id || !module) throw new Error("group_id and module required");
+
+      const { data: rows } = await supabase
+        .from("dive_validators")
+        .select("participant_id")
+        .eq("group_id", group_id)
+        .eq("module", module)
+        .limit(1);
+
+      const validatorId = rows?.[0]?.participant_id || null;
+      let validatorName = null;
+      if (validatorId) {
+        const { data: p } = await supabase.from("dive_participants").select("name").eq("id", validatorId).single();
+        validatorName = p?.name || null;
+      }
+
+      return new Response(JSON.stringify({ validator_id: validatorId, validator_name: validatorName }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── GET GROUP STAKEHOLDERS (M2 Phase 2 + 3) ───────────────
+    if (action === "get_group_stakeholders") {
+      const { group_id } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      // Get group info (M2 consensus status)
+      const { data: group, error: grpErr } = await supabase
+        .from("dive_groups")
+        .select("id, name, institution_name, m2_consensus_status, m2_consensus_validated_at, m2_consensus_validated_by, m2_reopen_requested_by, m2_reopen_requested_at")
+        .eq("id", group_id)
+        .single();
+      if (grpErr) throw grpErr;
+
+      // Get group members
+      const { data: members, error: memErr } = await supabase
+        .from("dive_participants")
+        .select("id, name")
+        .eq("group_id", group_id);
+      if (memErr) throw memErr;
+
+      // Get individual stakeholders (exclude consensus)
+      const { data: stakeholders, error: stkErr } = await supabase
+        .from("dive_stakeholders")
+        .select("*")
+        .eq("group_id", group_id)
+        .or("is_consensus.is.null,is_consensus.eq.false");
+      if (stkErr) throw stkErr;
+
+      // Get consensus stakeholders
+      const { data: consensusStakeholders, error: conErr } = await supabase
+        .from("dive_stakeholders")
+        .select("*")
+        .eq("group_id", group_id)
+        .eq("is_consensus", true);
+      if (conErr) throw conErr;
+
+      // Get validator for M2
+      const { data: validatorRows } = await supabase
+        .from("dive_validators")
+        .select("participant_id")
+        .eq("group_id", group_id)
+        .eq("module", "module2")
+        .limit(1);
+      const validatorId = validatorRows?.[0]?.participant_id || null;
+
+      // Enrich individual stakeholders with member name
+      const memberMap: Record<string, string> = {};
+      for (const m of members || []) memberMap[m.id] = m.name;
+
+      const enrichedStakeholders = (stakeholders || []).map((s: Record<string, unknown>) => ({
+        ...s,
+        participant_name: memberMap[s.participant_id as string] || "Unknown",
+      }));
+
+      // Count completed members (those who have at least 1 stakeholder)
+      const participantIds = new Set((stakeholders || []).map((s: Record<string, unknown>) => s.participant_id));
+      const completedCount = participantIds.size;
+
+      return new Response(
+        JSON.stringify({
+          members: (members || []).map((m: { id: string; name: string }) => ({
+            id: m.id,
+            name: m.name,
+            has_completed: participantIds.has(m.id),
+          })),
+          individualStakeholders: enrichedStakeholders,
+          consensusStakeholders: consensusStakeholders || [],
+          consensusStatus: group.m2_consensus_status || "none",
+          validatorId,
+          completedCount,
+          totalCount: (members || []).length,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── SAVE M2 CONSENSUS STAKEHOLDERS ─────────────────────────
+    if (action === "save_m2_consensus") {
+      const { group_id, stakeholders } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      // Delete existing consensus stakeholders for this group
+      await supabase
+        .from("dive_stakeholders")
+        .delete()
+        .eq("group_id", group_id)
+        .eq("is_consensus", true);
+
+      // Insert new ones
+      if (stakeholders?.length > 0) {
+        const rows = stakeholders.map((s: Record<string, unknown>) => ({
+          group_id,
+          participant_id: null,
+          is_consensus: true,
+          name: s.name,
+          role: s.role,
+          discipline: s.discipline || null,
+          power: s.power || null,
+          interest: s.interest || null,
+          behavior: s.behavior,
+          anxiety: s.anxiety,
+          missing_lever: s.missing_lever,
+          notes: s.notes || null,
+          generated_counter_measure: s.generated_counter_measure || null,
+        }));
+        const { error } = await supabase.from("dive_stakeholders").insert(rows);
+        if (error) throw error;
+      }
+
+      // Set status to draft if currently 'none'
+      const { data: grp } = await supabase
+        .from("dive_groups")
+        .select("m2_consensus_status")
+        .eq("id", group_id)
+        .single();
+
+      if (grp?.m2_consensus_status === "none") {
+        await supabase
+          .from("dive_groups")
+          .update({ m2_consensus_status: "draft" })
+          .eq("id", group_id);
+      }
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── VALIDATE M2 CONSENSUS ──────────────────────────────────
+    if (action === "validate_m2_consensus") {
+      const { group_id, participant_id } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      const { error } = await supabase
+        .from("dive_groups")
+        .update({
+          m2_consensus_status: "validated",
+          m2_consensus_validated_at: new Date().toISOString(),
+          m2_consensus_validated_by: participant_id || null,
+        })
+        .eq("id", group_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── REQUEST M2 REOPEN ──────────────────────────────────────
+    if (action === "request_m2_reopen") {
+      const { group_id, participant_id } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      const { error } = await supabase
+        .from("dive_groups")
+        .update({
+          m2_consensus_status: "reopen_requested",
+          m2_reopen_requested_by: participant_id || null,
+          m2_reopen_requested_at: new Date().toISOString(),
+        })
+        .eq("id", group_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── APPROVE M2 REOPEN ──────────────────────────────────────
+    if (action === "approve_m2_reopen") {
+      const { group_id } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      const { error } = await supabase
+        .from("dive_groups")
+        .update({
+          m2_consensus_status: "reopened",
+          m2_reopen_requested_by: null,
+          m2_reopen_requested_at: null,
+        })
+        .eq("id", group_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── DENY M2 REOPEN ─────────────────────────────────────────
+    if (action === "deny_m2_reopen") {
+      const { group_id } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      const { error } = await supabase
+        .from("dive_groups")
+        .update({
+          m2_consensus_status: "validated",
+          m2_reopen_requested_by: null,
+          m2_reopen_requested_at: null,
+        })
+        .eq("id", group_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

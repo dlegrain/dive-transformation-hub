@@ -83,6 +83,8 @@ Deno.serve(async (req) => {
             behavior: s.behavior,
             anxiety: s.anxiety,
             missing_lever: s.missing_lever,
+            power: s.power || null,
+            interest: s.interest || null,
             notes: s.notes || null,
             generated_counter_measure: s.generated_counter_measure || null,
           })

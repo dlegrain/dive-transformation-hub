@@ -47,11 +47,14 @@ interface PersistedState {
   tasks: PlanTask[];
   kpis: KPI[];
   aiMessages: Record<string, AIMessage[]>;
-  // Consensus
+  // M1 Consensus
   consensusDimensions: Record<DimensionKey, DimensionAssessment> | null;
   consensusCustomDimensions: CustomDimension[];
   consensusHiddenDimensions: DimensionKey[];
   consensusStatus: ConsensusStatus;
+  // M2 Consensus
+  consensusStakeholders: Stakeholder[] | null;
+  m2ConsensusStatus: ConsensusStatus;
 }
 
 function loadFromStorage(): Partial<PersistedState> {
@@ -101,7 +104,7 @@ interface AppStore {
   aiMessages: Record<string, AIMessage[]>; // keyed by module
   addAIMessage: (module: string, message: AIMessage) => void;
 
-  // Consensus
+  // M1 Consensus
   consensusDimensions: Record<DimensionKey, DimensionAssessment> | null;
   setConsensusDimensions: (dims: Record<DimensionKey, DimensionAssessment> | null) => void;
   consensusCustomDimensions: CustomDimension[];
@@ -111,10 +114,17 @@ interface AppStore {
   consensusStatus: ConsensusStatus;
   setConsensusStatus: (status: ConsensusStatus) => void;
 
+  // M2 Consensus
+  consensusStakeholders: Stakeholder[] | null;
+  setConsensusStakeholders: (s: Stakeholder[] | null) => void;
+  m2ConsensusStatus: ConsensusStatus;
+  setM2ConsensusStatus: (status: ConsensusStatus) => void;
+
   // Computed: returns consensus data when validated, otherwise individual
   effectiveDimensions: Record<DimensionKey, DimensionAssessment>;
   effectiveCustomDimensions: CustomDimension[];
   effectiveHiddenDimensions: DimensionKey[];
+  effectiveStakeholders: Stakeholder[];
 
   // Admin
   fillSampleData: () => void;
@@ -140,12 +150,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [consensusCustomDimensions, setConsensusCustomDimensions] = useState<CustomDimension[]>(saved.consensusCustomDimensions || []);
   const [consensusHiddenDimensions, setConsensusHiddenDimensions] = useState<DimensionKey[]>(saved.consensusHiddenDimensions || []);
   const [consensusStatus, setConsensusStatus] = useState<ConsensusStatus>(saved.consensusStatus || 'none');
+  const [consensusStakeholders, setConsensusStakeholders] = useState<Stakeholder[] | null>(saved.consensusStakeholders || null);
+  const [m2ConsensusStatus, setM2ConsensusStatus] = useState<ConsensusStatus>(saved.m2ConsensusStatus || 'none');
 
   // Computed: use consensus when validated, otherwise individual
   const isConsensusActive = consensusStatus === 'validated' && consensusDimensions !== null;
   const effectiveDimensions = isConsensusActive ? consensusDimensions : dimensions;
   const effectiveCustomDimensions = isConsensusActive ? consensusCustomDimensions : customDimensions;
   const effectiveHiddenDimensions = isConsensusActive ? consensusHiddenDimensions : hiddenDimensions;
+  const isM2ConsensusActive = m2ConsensusStatus === 'validated' && consensusStakeholders !== null;
+  const effectiveStakeholders = isM2ConsensusActive ? consensusStakeholders : stakeholders;
 
   const setDimension = (key: DimensionKey, sub: 'tools' | 'data' | 'culture', value: 0 | 1 | 2 | 3) => {
     setDimensions((prev) => ({
@@ -186,12 +200,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setConsensusCustomDimensions([]);
     setConsensusHiddenDimensions([]);
     setConsensusStatus('none');
+    setConsensusStakeholders(null);
+    setM2ConsensusStatus('none');
   };
 
   // Persist to localStorage on every state change
   const persist = useCallback(() => {
-    saveToStorage({ institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus });
-  }, [institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus]);
+    saveToStorage({ institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus, consensusStakeholders, m2ConsensusStatus });
+  }, [institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus, consensusStakeholders, m2ConsensusStatus]);
 
   useEffect(() => {
     persist();
@@ -214,7 +230,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         consensusCustomDimensions, setConsensusCustomDimensions,
         consensusHiddenDimensions, setConsensusHiddenDimensions,
         consensusStatus, setConsensusStatus,
+        consensusStakeholders, setConsensusStakeholders,
+        m2ConsensusStatus, setM2ConsensusStatus,
         effectiveDimensions, effectiveCustomDimensions, effectiveHiddenDimensions,
+        effectiveStakeholders,
         fillSampleData, resetAll,
       }}
     >
