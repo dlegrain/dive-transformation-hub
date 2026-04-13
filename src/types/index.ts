@@ -182,6 +182,25 @@ export interface Participant {
 }
 
 // ============================================================
+// AI Usage Survey
+// ============================================================
+
+export type AIFrequency = 'never' | 'monthly' | 'weekly' | 'daily' | 'multiple_daily';
+export type PaidVsFree = 'free_only' | 'mostly_free' | 'mix' | 'mostly_paid' | 'paid_only';
+
+export interface AISurvey {
+  id?: string;
+  participant_id: string;
+  session_id: string;
+  models_count: number;
+  models_used: string[];
+  task_types: string[];
+  frequency: AIFrequency;
+  paid_vs_free: PaidVsFree;
+  created_at?: string;
+}
+
+// ============================================================
 // App State
 // ============================================================
 

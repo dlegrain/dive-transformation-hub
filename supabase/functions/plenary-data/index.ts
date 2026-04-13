@@ -99,6 +99,11 @@ Deno.serve(async (req) => {
       .from("dive_kpis")
       .select("name, type, phase");
 
+    // Fetch AI usage surveys
+    const { data: surveys } = await supabase
+      .from("dive_ai_surveys")
+      .select("models_count, models_used, task_types, frequency, paid_vs_free, vibe_coding");
+
     const result = {
       participantCount: assessments?.length || 0,
       dimensionAverages,
@@ -106,6 +111,7 @@ Deno.serve(async (req) => {
       solutions: solutions || [],
       tasks: tasks || [],
       kpis: kpis || [],
+      surveys: surveys || [],
     };
 
     return new Response(JSON.stringify(result), {

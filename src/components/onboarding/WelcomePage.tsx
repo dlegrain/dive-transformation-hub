@@ -44,7 +44,7 @@ export default function WelcomePage() {
     localStorage.setItem('dive-hub-data', JSON.stringify(parsed));
 
     login(result.participant, result.group, result.session);
-    navigate('/module1', { replace: true });
+    navigate('/survey', { replace: true });
   };
 
   const handleLogin = async (e: React.FormEvent) => {

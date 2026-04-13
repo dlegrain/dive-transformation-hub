@@ -22,6 +22,7 @@ import {
   Users,
   Lightbulb,
   CalendarCheck,
+  ClipboardList,
   ArrowLeft,
   Monitor,
   EyeOff,
@@ -38,9 +39,10 @@ import {
   PLAN_PHASES,
 } from '../../lib/constants';
 
-type Tab = 'maturity' | 'resistance' | 'solutions' | 'plan';
+type Tab = 'survey' | 'maturity' | 'resistance' | 'solutions' | 'plan';
 
 const TABS: { id: Tab; label: string; icon: typeof RadarIcon; day: string }[] = [
+  { id: 'survey', label: 'AI Survey', icon: ClipboardList, day: 'Intro' },
   { id: 'maturity', label: 'Maturity', icon: RadarIcon, day: 'Day 1' },
   { id: 'resistance', label: 'Resistance', icon: Users, day: 'Day 2' },
   { id: 'solutions', label: 'Solutions', icon: Lightbulb, day: 'Day 3' },
@@ -60,6 +62,7 @@ interface PlenaryData {
   solutions: { name: string; target: string; difficulty: string; status: string; assigned_phase: number | null }[];
   tasks: { name: string; phase: number; champion_target: string; priority: string; status: string }[];
   kpis: { name: string; type: string; phase: number | null }[];
+  surveys: { models_count: number; models_used: string[]; task_types: string[]; frequency: string; paid_vs_free: string; vibe_coding: string | null }[];
 }
 
 const EMPTY_DATA: PlenaryData = {
@@ -69,13 +72,14 @@ const EMPTY_DATA: PlenaryData = {
   solutions: [],
   tasks: [],
   kpis: [],
+  surveys: [],
 };
 
 // Auto-refresh interval (seconds)
 const REFRESH_INTERVAL = 15;
 
 export default function PlenaryDashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>('maturity');
+  const [activeTab, setActiveTab] = useState<Tab>('survey');
   const [presentationMode, setPresentationMode] = useState(false);
   const [data, setData] = useState<PlenaryData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
@@ -188,6 +192,7 @@ export default function PlenaryDashboard() {
           </div>
         ) : (
           <>
+            {activeTab === 'survey' && <SurveyTab data={data} dark={presentationMode} />}
             {activeTab === 'maturity' && <MaturityTab data={data} dark={presentationMode} />}
             {activeTab === 'resistance' && <ResistanceTab data={data} dark={presentationMode} />}
             {activeTab === 'solutions' && <SolutionsTab data={data} dark={presentationMode} />}
@@ -227,6 +232,196 @@ function StatBox({ label, value, color, dark }: { label: string; value: string |
         {value}
       </div>
       <div className={`text-xs mt-1 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>{label}</div>
+    </div>
+  );
+}
+
+// ============================================================
+// Intro: AI Usage Survey
+// ============================================================
+const FREQ_LABELS: Record<string, string> = {
+  never: 'Never',
+  monthly: 'Monthly',
+  weekly: 'Weekly',
+  daily: 'Daily',
+  multiple_daily: 'Multiple × / day',
+};
+const PAID_LABELS: Record<string, string> = {
+  free_only: 'Free only',
+  mostly_free: 'Mostly free',
+  mix: 'Mix',
+  mostly_paid: 'Mostly paid',
+  paid_only: 'Paid only',
+};
+const VIBE_LABELS: Record<string, string> = {
+  yes: 'Yes, I do it',
+  heard: 'Heard of it',
+  no: 'No idea',
+};
+
+function countItems(arrays: string[][]): { name: string; count: number }[] {
+  const counts: Record<string, number> = {};
+  for (const arr of arrays) {
+    for (const item of arr) {
+      counts[item] = (counts[item] || 0) + 1;
+    }
+  }
+  return Object.entries(counts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function SurveyTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
+  const { surveys } = data;
+
+  if (surveys.length === 0) {
+    return <EmptyState message="No survey responses yet. Waiting for participants..." dark={dark} />;
+  }
+
+  // Stats
+  const avgModels =
+    surveys.reduce((s, r) => s + (r.models_count || 0), 0) / surveys.length;
+  const modelPopularity = countItems(surveys.map((s) => s.models_used || []));
+  const taskPopularity = countItems(surveys.map((s) => s.task_types || []));
+  const topModel = modelPopularity[0]?.name || '—';
+  const topTask = taskPopularity[0]?.name || '—';
+
+  // Frequency distribution
+  const freqOrder = ['never', 'monthly', 'weekly', 'daily', 'multiple_daily'];
+  const freqData = freqOrder.map((key) => ({
+    name: FREQ_LABELS[key] || key,
+    count: surveys.filter((s) => s.frequency === key).length,
+  }));
+
+  // Paid vs free
+  const paidOrder = ['free_only', 'mostly_free', 'mix', 'mostly_paid', 'paid_only'];
+  const paidData = paidOrder
+    .map((key) => ({
+      name: PAID_LABELS[key] || key,
+      count: surveys.filter((s) => s.paid_vs_free === key).length,
+    }))
+    .filter((d) => d.count > 0);
+
+  // Vibe coding
+  const vibeOrder = ['yes', 'heard', 'no'];
+  const vibeData = vibeOrder.map((key) => ({
+    key,
+    label: VIBE_LABELS[key] || key,
+    count: surveys.filter((s) => s.vibe_coding === key).length,
+    pct: surveys.length > 0
+      ? Math.round((surveys.filter((s) => s.vibe_coding === key).length / surveys.length) * 100)
+      : 0,
+  }));
+
+  const vibeColors: Record<string, string> = { yes: '#22c55e', heard: '#f59e0b', no: '#94a3b8' };
+
+  return (
+    <div className="space-y-6">
+      {/* Stat boxes */}
+      <div className="grid grid-cols-4 gap-4">
+        <StatBox label="Responses" value={surveys.length} dark={dark} />
+        <StatBox label="Avg Models / Person" value={avgModels.toFixed(1)} color="#3b82f6" dark={dark} />
+        <StatBox label="Most Popular Tool" value={topModel} color="#f59e0b" dark={dark} />
+        <StatBox label="Most Common Use" value={topTask} color="#22c55e" dark={dark} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Frequency */}
+        <Card title="How Often Do You Use AI?" dark={dark}>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={freqData} margin={{ left: 10, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#374151' : '#f3f4f6'} />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+              <Bar dataKey="count" name="People" radius={[4, 4, 0, 0]}>
+                {freqData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Model popularity */}
+        <Card title="Which AI Models?" dark={dark}>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={modelPopularity.slice(0, 8)} layout="vertical" margin={{ left: 10, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#374151' : '#f3f4f6'} />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: dark ? '#9ca3af' : '#6b7280' }} width={100} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+              <Bar dataKey="count" name="Users" radius={[0, 4, 4, 0]} barSize={18}>
+                {modelPopularity.slice(0, 8).map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Task types */}
+        <Card title="What Tasks?" dark={dark}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={taskPopularity.slice(0, 10)} layout="vertical" margin={{ left: 10, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#374151' : '#f3f4f6'} />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: dark ? '#9ca3af' : '#6b7280' }} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: dark ? '#9ca3af' : '#6b7280' }} width={130} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+              <Bar dataKey="count" name="Users" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={16} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Paid vs free */}
+        <Card title="Paid vs Free AI" dark={dark}>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={paidData}
+                dataKey="count"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
+                labelLine={true}
+                fontSize={11}
+              >
+                {paidData.map((_, i) => (
+                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            </PieChart>
+          </ResponsiveContainer>
+
+          {/* Vibe coding */}
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <h4 className={`text-sm font-medium mb-3 ${dark ? 'text-gray-300' : 'text-gray-700'}`}>
+              Vibe Coding Experience
+            </h4>
+            <div className="space-y-2">
+              {vibeData.map((v) => (
+                <div key={v.key}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className={`text-xs ${dark ? 'text-gray-400' : 'text-gray-600'}`}>{v.label}</span>
+                    <span className={`text-xs font-semibold ${dark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {v.count} ({v.pct}%)
+                    </span>
+                  </div>
+                  <div className={`h-2 rounded-full ${dark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${v.pct}%`, backgroundColor: vibeColors[v.key] }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

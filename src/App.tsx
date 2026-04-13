@@ -10,6 +10,7 @@ import Module4Page from './components/modules/module4/Module4Page';
 import ExportPage from './components/export/ExportPage';
 import DocsPage from './components/docs/DocsPage';
 import PlenaryDashboard from './components/plenary/PlenaryDashboard';
+import AISurveyPage from './components/onboarding/AISurveyPage';
 
 function ProtectedRoutes() {
   const { participant, isLoading } = useAuth();
@@ -34,6 +35,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/welcome" element={<WelcomePage />} />
+            <Route path="/survey" element={<AISurveyPage />} />
             <Route element={<ProtectedRoutes />}>
               <Route path="/" element={<Navigate to="/module1" replace />} />
               <Route path="/module1" element={<Module1Page />} />
