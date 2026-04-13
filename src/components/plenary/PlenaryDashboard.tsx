@@ -10,7 +10,6 @@ import {
   Cell,
   PieChart,
   Pie,
-  Legend,
 } from 'recharts';
 import {
   Radar as RadarIcon,
