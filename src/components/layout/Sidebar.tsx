@@ -90,7 +90,7 @@ export default function Sidebar() {
           }
         >
           <BookOpen size={16} />
-          Research Articles
+          Documentation
         </NavLink>
       </div>
 
