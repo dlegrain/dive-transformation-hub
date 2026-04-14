@@ -95,7 +95,7 @@ ${filledPainPoints.map((pp, i) => {
   return `  ${i + 1}. ${pp.text}${pestel}${barrier}`;
 }).join('\n')}
 ${linkedPainPoints.length > 0
-  ? `\nThis stakeholder's resistance is directly linked to: ${linkedPainPoints.map((pp) => `"${pp.text}"`).join(', ')}. Ground your counter-measure in how their specific behavior/anxiety manifests in the context of these pain points.`
+  ? `\nThis stakeholder is linked to these institutional pain points: ${linkedPainPoints.map((pp) => `"${pp.text}"`).join(', ')}. Reference them in your strategy.`
   : '\nThis stakeholder has not been linked to a specific pain point — address the institutional context generally.'
 }`
     : '';
@@ -242,8 +242,9 @@ Generate a strategy that specifically addresses:
 
     return content || 'Could not generate counter-measure. Please try again.';
   } catch (err) {
-    console.error('AI counter-measure error:', err);
-    return 'Error generating counter-measure. Check that the AI service is configured.';
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('AI counter-measure error:', msg);
+    return `Error generating strategy: ${msg}`;
   }
 }
 
