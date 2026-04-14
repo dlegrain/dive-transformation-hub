@@ -111,11 +111,9 @@ const server = http.createServer(async (req, res) => {
           const { randomUUID } = await import('crypto');
           const traceId = randomUUID();
           const generationId = randomUUID();
-          const usage = {
-            input: result.usage?.input_tokens ?? 0,
-            output: result.usage?.output_tokens ?? 0,
-            total: (result.usage?.input_tokens ?? 0) + (result.usage?.output_tokens ?? 0),
-          };
+          const inputTokens = result.usage?.input_tokens ?? 0;
+          const outputTokens = result.usage?.output_tokens ?? 0;
+          const usage = { input: inputTokens, output: outputTokens, total: inputTokens + outputTokens };
           await langfuseTrace(traceId, generationId, { system: systemPrompt, messages }, content, 'claude-sonnet-4-20250514', usage);
 
           res.writeHead(200, { 'Content-Type': 'application/json' });

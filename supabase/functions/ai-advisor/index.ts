@@ -96,11 +96,9 @@ Deno.serve(async (req) => {
     // Langfuse tracing
     const traceId = crypto.randomUUID();
     const generationId = crypto.randomUUID();
-    const usage = {
-      input: data.usage?.input_tokens ?? 0,
-      output: data.usage?.output_tokens ?? 0,
-      total: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0),
-    };
+    const inputTokens = data.usage?.input_tokens ?? 0;
+    const outputTokens = data.usage?.output_tokens ?? 0;
+    const usage = { input: inputTokens, output: outputTokens, total: inputTokens + outputTokens };
     await langfuseTrace(traceId, generationId, { system: systemPrompt, messages }, content, model, usage);
 
     return new Response(
