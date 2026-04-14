@@ -215,7 +215,7 @@ Generate a strategy that specifically addresses:
 
   try {
     const devProxy = import.meta.env.DEV ? 'http://localhost:3001' : null;
-    let content: string;
+    let content: string | undefined;
 
     if (devProxy) {
       const resp = await fetch(`${devProxy}/functions/v1/ai-advisor`, {
@@ -230,20 +230,41 @@ Generate a strategy that specifically addresses:
       const data = await resp.json();
       content = data.content;
     } else {
-      const { data, error } = await supabase.functions.invoke('ai-advisor', {
-        body: {
-          systemPrompt,
-          messages: [{ role: 'user', content: userMessage }],
-        },
-      });
-      if (error) throw error;
-      content = data.content;
+      // Retry up to 3 times on overload errors
+      let lastError: unknown;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 2000 * attempt));
+        const { data, error } = await supabase.functions.invoke('ai-advisor', {
+          body: {
+            systemPrompt,
+            messages: [{ role: 'user', content: userMessage }],
+          },
+        });
+        if (error) {
+          const errStr = typeof error === 'object' ? JSON.stringify(error) : String(error);
+          if (errStr.includes('overloaded')) {
+            lastError = error;
+            continue;
+          }
+          throw error;
+        }
+        if (data?.error && String(data.error).includes('overloaded')) {
+          lastError = new Error(data.details || data.error);
+          continue;
+        }
+        content = data.content;
+        break;
+      }
+      if (!content) throw lastError ?? new Error('AI service unavailable after 3 attempts');
     }
 
     return content || 'Could not generate counter-measure. Please try again.';
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('AI counter-measure error:', msg);
+    if (msg.includes('overloaded') || msg.includes('Overloaded')) {
+      return 'The AI service is temporarily overloaded. Please wait 30 seconds and try again.';
+    }
     return `Error generating strategy: ${msg}`;
   }
 }
