@@ -49,6 +49,21 @@ function Tooltip({ text }: { text: string }) {
   );
 }
 
+// Normalize stakeholder data from server — anxiety may be a legacy scalar string
+function normalizeStakeholder(s: Stakeholder): Stakeholder {
+  return {
+    ...s,
+    anxiety: s.anxiety == null
+      ? undefined
+      : Array.isArray(s.anxiety)
+        ? s.anxiety
+        : [s.anxiety as unknown as AnxietyType],
+  };
+}
+function normalizeStakeholders(list: Stakeholder[]): Stakeholder[] {
+  return list.map(normalizeStakeholder);
+}
+
 // ── AI counter-measure generation ──────────────────────────────
 async function generateAICounterMeasure(
   stakeholder: {
@@ -257,7 +272,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
 
   // Initialize from existing consensus or empty
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(() => {
-    if (groupData.consensusStakeholders.length > 0) return groupData.consensusStakeholders;
+    if (groupData.consensusStakeholders.length > 0) return normalizeStakeholders(groupData.consensusStakeholders);
     return [];
   });
 
@@ -292,7 +307,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
   // Update local state when consensus data arrives from server
   useEffect(() => {
     if (groupData.consensusStakeholders.length > 0) {
-      setStakeholders(groupData.consensusStakeholders);
+      setStakeholders(normalizeStakeholders(groupData.consensusStakeholders));
     }
   }, [groupData.consensusStakeholders]);
 
