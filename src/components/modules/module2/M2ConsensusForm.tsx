@@ -168,7 +168,28 @@ RULES:
     : 'MONITOR — low priority, minimal effort'
     : 'Unknown';
 
-  const userMessage = `Generate a counter-measure strategy for this stakeholder:
+  const isSupportive = stakeholder.behavior === 'supportive';
+
+  const userMessage = isSupportive
+    ? `Generate a LEVERAGE STRATEGY for this supportive stakeholder — they are an ALLY, not a resistor:
+
+**Name:** ${stakeholder.name}
+**Role:** ${stakeholder.role}${stakeholder.discipline && stakeholder.discipline !== 'Other' ? ` (${stakeholder.discipline})` : ''}
+
+**Power/Interest Matrix:**
+- Power: ${powerEntry?.label || 'Unknown'} — ${powerEntry?.description || ''}
+- Interest: ${interestEntry?.label || 'Unknown'} — ${interestEntry?.description || ''}
+- Quadrant: ${quadrant}
+
+This person is SUPPORTIVE of AI adoption. Do NOT treat them as a resistor.
+
+Generate a leverage strategy that addresses:
+1. HOW to activate and amplify their support given their quadrant
+2. WHAT specific role they could play (champion, pilot tester, policy co-designer, peer mentor...)
+3. This week: one concrete action to engage them immediately
+
+Use the ### 🎯 Approach / ### 🧠 Root Cause / ### ⚡ This Week structure. Cite research where relevant.`
+    : `Generate a counter-measure strategy for this stakeholder:
 
 **Name:** ${stakeholder.name}
 **Role:** ${stakeholder.role}${stakeholder.discipline && stakeholder.discipline !== 'Other' ? ` (${stakeholder.discipline})` : ''}
