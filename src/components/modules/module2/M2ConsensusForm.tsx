@@ -309,9 +309,11 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
       isPainPointsTyping.current = true;
       store.setPainPoints(newPainPoints);
       if (painPointsTimer.current) clearTimeout(painPointsTimer.current);
-      painPointsTimer.current = setTimeout(() => {
-        savePainPoints(newPainPoints);
-        isPainPointsTyping.current = false;
+      painPointsTimer.current = setTimeout(async () => {
+        await savePainPoints(newPainPoints);
+        // Keep the lock for one full poll cycle (6s) after save completes
+        // so the next poll doesn't overwrite with stale data
+        setTimeout(() => { isPainPointsTyping.current = false; }, 6000);
       }, SAVE_DEBOUNCE_MS);
     },
     [savePainPoints, store]
