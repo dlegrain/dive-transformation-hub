@@ -80,14 +80,18 @@ RESISTANCE BEHAVIORS (Deacon et al., 2025):
 AI ANXIETIES (Cao et al., 2026):
 - Learning Anxiety: fear of not mastering technology. Solution: low-stakes hands-on workshops, augment existing workflows.
 - Sociotechnical Blindness: fear of being left behind. Can be leveraged positively with communities of practice.
-- Job Displacement: existential fear of losing value. Hardest to solve. Frame AI as augmentation. In stable public universities, this is often NOT the real blocker (Verano-Tacoronte, 2025).
+- Job Displacement: existential fear of losing value. Hardest to solve. Frame AI as augmentation. In stable public universities, this is often NOT the real blocker (Verano-Tacoronte, 2025). IMPORTANT: for Students, this anxiety takes a different form — not "I will lose my job" but "I will graduate irrelevant, without the AI skills employers demand." Reframe as career readiness: mastering AI now is a competitive advantage, not a threat.
 - Ethical & Pedagogical Barriers (Hong et al., 2026): NOT resistance — this is critical engagement. These people are your ALLIES for drafting AI guidelines.
 
 ROLE-SPECIFIC LEVERS:
 - Professors (Singh & Strzelecki, 2026): Do NOT use social pressure or public demos. Offer private, risk-free experimentation. 3 levers: relative advantage (show time savings on THEIR tasks), compatibility (fit their workflow), low complexity (zero friction). Even resistors MUST be trained so they understand how students use AI (Verano-Tacoronte, 2025). Female faculty show lower adoption — design targeted mentoring.
-- Students (Bui et al., 2025): Social influence and peer success stories are powerful drivers. Facilitating conditions (devices, WiFi, access) are prerequisites. Partner with industry.
+- Students (Bui et al., 2025): Social influence and peer success stories are powerful drivers. Facilitating conditions (devices, WiFi, access) are prerequisites. Partner with industry. Students are LEARNERS, not professionals — do NOT apply faculty disciplinary identity logic to them. Their resistance is not about defending a career; it is about uncertainty, access, and social norms within their peer group.
 - Direction (Nguyen & Hong, 2025 — MOET): Need governance structures (steering committees), dedicated budget allocation, strategic vision integrating AI into long-term plans. 5 MOET strategies: S1 Infrastructure, S2 Equity/Faculty Dev, S3 Digital Pedagogy, S4 Strategic Planning, S5 Financing.
 - Administration (Deacon et al., 2025): Overwhelmed by workload. Departmental silos prevent data sharing. Legacy paper-based rules block digital workflows. Universities are decentralized — each faculty is a "small kingdom."
+
+DISCIPLINE MODIFIER — applies to Professors only (Cao et al., 2026). Do NOT apply this logic to Students — students are learners, not discipline practitioners, and the research does not support a discipline effect for them:
+- STEM: AI anxiety often converts into curiosity or problem-solving drive. Frame AI as a tool that accelerates disciplinary work (faster literature reviews, data analysis, simulations). Lead with concrete efficiency gains. These profiles respond well to hands-on experimentation.
+- Humanities / Social Sciences: AI is frequently perceived as a direct threat to disciplinary identity and the irreplaceable value of interpretive, contextual, and critical expertise. Do NOT frame AI as a productivity tool — this reinforces the fear. Instead, explicitly validate that AI cannot replace hermeneutics, close reading, ethnographic judgment, or contextual analysis. Lead with examples from their own field (e.g., AI-assisted corpus analysis, not "AI writes essays"). Engage their critical thinking as an asset: invite them to audit AI outputs, co-author AI use guidelines, or evaluate AI-generated content — positions where their disciplinary expertise is the quality control. Their ethical engagement is a strength, not a blocker.
 
 CULTURAL CONTEXT (Vietnamese universities):
 - High Power Distance: people wait for the Boss to decide. Staff may not report problems to "show respect."
@@ -586,13 +590,18 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                   {STAKEHOLDER_ROLES.map((r) => (<option key={r} value={r}>{r}</option>))}
                 </select>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Discipline</label>
-                <select value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value as Discipline })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
-                  {DISCIPLINES.map((d) => (<option key={d} value={d}>{d}</option>))}
-                </select>
-              </div>
+              {form.role === 'Professors' && (
+                <div>
+                  <label className="flex items-center text-xs font-medium text-gray-600 mb-1">
+                    Discipline
+                    <Tooltip text="STEM faculty tend to reframe AI anxiety as a challenge to solve. Humanities & Social Sciences faculty often perceive AI as a threat to their disciplinary identity and interpretive expertise — they need fundamentally different interventions (Cao et al., 2026)." />
+                  </label>
+                  <select value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value as Discipline })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none">
+                    {DISCIPLINES.map((d) => (<option key={d} value={d}>{d}</option>))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Power / Interest */}

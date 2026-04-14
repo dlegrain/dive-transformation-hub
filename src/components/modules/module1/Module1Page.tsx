@@ -1,9 +1,10 @@
-import { Plus, EyeOff, Users, Handshake } from 'lucide-react';
+import { Plus, EyeOff, Users, Handshake, BarChart2 } from 'lucide-react';
 import DimensionForm from './DimensionForm';
 import CustomDimensionForm from './CustomDimensionForm';
 import RadarChart from './RadarChart';
 import GroupComparisonOverlay from './GroupComparisonOverlay';
 import ConsensusForm from './ConsensusForm';
+import GroupConsensusTable from '../../plenary/GroupConsensusTable';
 import ConsensusStatusBadge from './ConsensusStatusBadge';
 import { useStore } from '../../../lib/store';
 import { useAuth } from '../../../lib/auth-context';
@@ -247,6 +248,24 @@ export default function Module1Page() {
             </p>
           </div>
           <ConsensusForm groupData={groupData} onRefetch={refetch} />
+        </>
+      )}
+
+      {/* ─── Phase 4: Inter-institution Comparison ─────────────── */}
+      {groupData?.consensusStatus === 'validated' && (
+        <>
+          <div className="mt-10 mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart2 size={16} className="text-primary-600" />
+              <h2 className="text-lg font-bold text-gray-900">
+                Phase 4 — How Do Other Institutions Compare?
+              </h2>
+            </div>
+            <p className="text-gray-500 text-sm">
+              Once groups validate their consensus, their results appear here. Compare maturity profiles across institutions.
+            </p>
+          </div>
+          <GroupConsensusTable dark={false} />
         </>
       )}
     </div>
