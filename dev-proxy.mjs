@@ -21,6 +21,46 @@ if (!ANTHROPIC_API_KEY) {
   console.error('ANTHROPIC_API_KEY not found in .env or environment');
   process.exit(1);
 }
+const LANGFUSE_PUBLIC_KEY = process.env.LANGFUSE_PUBLIC_KEY;
+const LANGFUSE_SECRET_KEY = process.env.LANGFUSE_SECRET_KEY;
+const LANGFUSE_HOST = process.env.LANGFUSE_HOST ?? 'https://cloud.langfuse.com';
+
+async function langfuseTrace(traceId, generationId, input, output, model, usage) {
+  if (!LANGFUSE_PUBLIC_KEY || !LANGFUSE_SECRET_KEY) return;
+  const auth = Buffer.from(`${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}`).toString('base64');
+  const now = new Date().toISOString();
+  await fetch(`${LANGFUSE_HOST}/api/public/ingestion`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${auth}` },
+    body: JSON.stringify({
+      batch: [
+        {
+          id: traceId,
+          type: 'trace-create',
+          timestamp: now,
+          body: { id: traceId, name: 'ai-advisor', timestamp: now },
+        },
+        {
+          id: generationId,
+          type: 'generation-create',
+          timestamp: now,
+          body: {
+            id: generationId,
+            traceId,
+            name: 'claude-response',
+            model,
+            input,
+            output,
+            startTime: now,
+            endTime: now,
+            usage: { input: usage.input, output: usage.output, total: usage.total },
+          },
+        },
+      ],
+    }),
+  }).catch(() => { /* silencieux */ });
+}
+
 const PORT = 3001;
 
 const server = http.createServer(async (req, res) => {
@@ -62,10 +102,22 @@ const server = http.createServer(async (req, res) => {
     const proxyReq = https.request(options, (proxyRes) => {
       let data = '';
       proxyRes.on('data', (chunk) => data += chunk);
-      proxyRes.on('end', () => {
+      proxyRes.on('end', async () => {
         try {
           const result = JSON.parse(data);
           const content = result.content?.[0]?.text || 'No response generated.';
+
+          // Langfuse tracing
+          const { randomUUID } = await import('crypto');
+          const traceId = randomUUID();
+          const generationId = randomUUID();
+          const usage = {
+            input: result.usage?.input_tokens ?? 0,
+            output: result.usage?.output_tokens ?? 0,
+            total: (result.usage?.input_tokens ?? 0) + (result.usage?.output_tokens ?? 0),
+          };
+          await langfuseTrace(traceId, generationId, { system: systemPrompt, messages }, content, 'claude-sonnet-4-20250514', usage);
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ content }));
         } catch (e) {

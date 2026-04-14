@@ -1,6 +1,45 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+const LANGFUSE_PUBLIC_KEY = Deno.env.get("LANGFUSE_PUBLIC_KEY");
+const LANGFUSE_SECRET_KEY = Deno.env.get("LANGFUSE_SECRET_KEY");
+const LANGFUSE_HOST = Deno.env.get("LANGFUSE_HOST") ?? "https://cloud.langfuse.com";
+
+async function langfuseTrace(traceId: string, generationId: string, input: unknown, output: string, model: string, usage: { input: number; output: number; total: number }) {
+  if (!LANGFUSE_PUBLIC_KEY || !LANGFUSE_SECRET_KEY) return;
+  const auth = btoa(`${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}`);
+  const now = new Date().toISOString();
+  await fetch(`${LANGFUSE_HOST}/api/public/ingestion`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Basic ${auth}` },
+    body: JSON.stringify({
+      batch: [
+        {
+          id: traceId,
+          type: "trace-create",
+          timestamp: now,
+          body: { id: traceId, name: "ai-advisor", timestamp: now },
+        },
+        {
+          id: generationId,
+          type: "generation-create",
+          timestamp: now,
+          body: {
+            id: generationId,
+            traceId,
+            name: "claude-response",
+            model,
+            input,
+            output,
+            startTime: now,
+            endTime: now,
+            usage: { input: usage.input, output: usage.output, total: usage.total },
+          },
+        },
+      ],
+    }),
+  }).catch(() => { /* silencieux */ });
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +61,7 @@ Deno.serve(async (req) => {
 
   try {
     const { systemPrompt, messages } = await req.json();
+    const model = "claude-sonnet-4-20250514";
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -31,7 +71,7 @@ Deno.serve(async (req) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model,
         max_tokens: 1024,
         system: systemPrompt,
         messages: messages.map((m: { role: string; content: string }) => ({
@@ -52,6 +92,16 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
     const content = data.content?.[0]?.text || "No response generated.";
+
+    // Langfuse tracing
+    const traceId = crypto.randomUUID();
+    const generationId = crypto.randomUUID();
+    const usage = {
+      input: data.usage?.input_tokens ?? 0,
+      output: data.usage?.output_tokens ?? 0,
+      total: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0),
+    };
+    await langfuseTrace(traceId, generationId, { system: systemPrompt, messages }, content, model, usage);
 
     return new Response(
       JSON.stringify({ content }),
