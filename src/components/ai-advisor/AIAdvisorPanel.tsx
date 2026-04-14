@@ -74,6 +74,7 @@ export default function AIAdvisorPanel() {
         store.kpis,
         store.effectiveHiddenDimensions,
         store.effectiveCustomDimensions,
+        store.painPoints,
       );
 
       const conversationMessages = [...messages, userMessage].map((m) => ({

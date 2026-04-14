@@ -9,6 +9,7 @@ import type {
   KPI,
   AIMessage,
   ConsensusStatus,
+  PainPoint,
 } from '../types';
 import {
   sampleDimensions,
@@ -55,6 +56,8 @@ interface PersistedState {
   // M2 Consensus
   consensusStakeholders: Stakeholder[] | null;
   m2ConsensusStatus: ConsensusStatus;
+  // M2 Pain Points
+  painPoints: PainPoint[];
 }
 
 function loadFromStorage(): Partial<PersistedState> {
@@ -119,6 +122,9 @@ interface AppStore {
   setConsensusStakeholders: (s: Stakeholder[] | null) => void;
   m2ConsensusStatus: ConsensusStatus;
   setM2ConsensusStatus: (status: ConsensusStatus) => void;
+  // M2 Pain Points
+  painPoints: PainPoint[];
+  setPainPoints: (pp: PainPoint[]) => void;
 
   // Computed: returns consensus data when validated, otherwise individual
   effectiveDimensions: Record<DimensionKey, DimensionAssessment>;
@@ -152,6 +158,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [consensusStatus, setConsensusStatus] = useState<ConsensusStatus>(saved.consensusStatus || 'none');
   const [consensusStakeholders, setConsensusStakeholders] = useState<Stakeholder[] | null>(saved.consensusStakeholders || null);
   const [m2ConsensusStatus, setM2ConsensusStatus] = useState<ConsensusStatus>(saved.m2ConsensusStatus || 'none');
+  const [painPoints, setPainPoints] = useState<PainPoint[]>(saved.painPoints || []);
 
   // Computed: use consensus when validated, otherwise individual
   const isConsensusActive = consensusStatus === 'validated' && consensusDimensions !== null;
@@ -202,12 +209,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setConsensusStatus('none');
     setConsensusStakeholders(null);
     setM2ConsensusStatus('none');
+    setPainPoints([]);
   };
 
   // Persist to localStorage on every state change
   const persist = useCallback(() => {
-    saveToStorage({ institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus, consensusStakeholders, m2ConsensusStatus });
-  }, [institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus, consensusStakeholders, m2ConsensusStatus]);
+    saveToStorage({ institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus, consensusStakeholders, m2ConsensusStatus, painPoints });
+  }, [institutionName, assessorName, dimensions, customDimensions, hiddenDimensions, stakeholders, solutions, tasks, kpis, aiMessages, consensusDimensions, consensusCustomDimensions, consensusHiddenDimensions, consensusStatus, consensusStakeholders, m2ConsensusStatus, painPoints]);
 
   useEffect(() => {
     persist();
@@ -232,6 +240,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         consensusStatus, setConsensusStatus,
         consensusStakeholders, setConsensusStakeholders,
         m2ConsensusStatus, setM2ConsensusStatus,
+        painPoints, setPainPoints,
         effectiveDimensions, effectiveCustomDimensions, effectiveHiddenDimensions,
         effectiveStakeholders,
         fillSampleData, resetAll,

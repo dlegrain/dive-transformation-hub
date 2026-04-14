@@ -476,10 +476,10 @@ Deno.serve(async (req) => {
       const { group_id } = body;
       if (!group_id) throw new Error("group_id is required");
 
-      // Get group info (M2 consensus status)
+      // Get group info (M2 consensus status + pain points)
       const { data: group, error: grpErr } = await supabase
         .from("dive_groups")
-        .select("id, name, institution_name, m2_consensus_status, m2_consensus_validated_at, m2_consensus_validated_by, m2_reopen_requested_by, m2_reopen_requested_at")
+        .select("id, name, institution_name, m2_consensus_status, m2_consensus_validated_at, m2_consensus_validated_by, m2_reopen_requested_by, m2_reopen_requested_at, pain_points")
         .eq("id", group_id)
         .single();
       if (grpErr) throw grpErr;
@@ -542,6 +542,7 @@ Deno.serve(async (req) => {
           validatorId,
           completedCount,
           totalCount: (members || []).length,
+          painPoints: group.pain_points || [],
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -575,6 +576,7 @@ Deno.serve(async (req) => {
           missing_lever: s.missing_lever,
           notes: s.notes || null,
           generated_counter_measure: s.generated_counter_measure || null,
+          linked_pain_point_ids: s.linked_pain_point_ids || [],
         }));
         const { error } = await supabase.from("dive_stakeholders").insert(rows);
         if (error) throw error;
@@ -671,6 +673,22 @@ Deno.serve(async (req) => {
           m2_reopen_requested_by: null,
           m2_reopen_requested_at: null,
         })
+        .eq("id", group_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── SAVE PAIN POINTS ───────────────────────────────────────
+    if (action === "save_pain_points") {
+      const { group_id, pain_points } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      const { error } = await supabase
+        .from("dive_groups")
+        .update({ pain_points: pain_points || [] })
         .eq("id", group_id);
       if (error) throw error;
 

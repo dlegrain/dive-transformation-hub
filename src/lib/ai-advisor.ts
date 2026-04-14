@@ -7,6 +7,7 @@ import type {
   SolutionCard,
   PlanTask,
   KPI,
+  PainPoint,
 } from '../types';
 
 // ============================================================
@@ -53,7 +54,7 @@ function dimensionSummary(
   return lines.join('\n');
 }
 
-function stakeholderSummary(stakeholders: Stakeholder[]): string {
+function stakeholderSummary(stakeholders: Stakeholder[], painPoints: PainPoint[] = []): string {
   if (stakeholders.length === 0) return '  (No stakeholders mapped yet)';
   return stakeholders
     .map((s) => {
@@ -69,9 +70,23 @@ function stakeholderSummary(stakeholders: Stakeholder[]): string {
         : 'MONITOR'
         : null;
       const piStr = powerLabel && interestLabel ? ` | ${powerLabel}/${interestLabel} → ${quadrant}` : '';
-      return `  - ${s.name} (${s.role}${s.discipline ? ', ' + s.discipline : ''}): ${behavior} | ${anxiety} | Missing: ${lever}${piStr}`;
+      const linkedPPs = (s.linked_pain_point_ids || [])
+        .map((id) => painPoints.find((pp) => pp.id === id)?.text)
+        .filter(Boolean);
+      const ppStr = linkedPPs.length > 0 ? ` | Linked pain points: ${linkedPPs.join('; ')}` : '';
+      return `  - ${s.name} (${s.role}${s.discipline ? ', ' + s.discipline : ''}): ${behavior} | ${anxiety} | Missing: ${lever}${piStr}${ppStr}`;
     })
     .join('\n');
+}
+
+function painPointsSummary(painPoints: PainPoint[]): string {
+  const filled = painPoints.filter((pp) => pp.text.trim());
+  if (filled.length === 0) return '  (No pain points identified yet)';
+  return filled.map((pp, i) => {
+    const pestel = pp.pestel_category ? ` [PESTEL: ${pp.pestel_category}]` : '';
+    const barrier = pp.barrier_type ? ` [${pp.barrier_type}]` : '';
+    return `  ${i + 1}. ${pp.text}${pestel}${barrier}`;
+  }).join('\n');
 }
 
 function solutionSummary(solutions: SolutionCard[]): string {
@@ -137,6 +152,7 @@ export function buildSystemPrompt(
   kpis: KPI[],
   hiddenDimensions: DimensionKey[] = [],
   customDimensions: CustomDimension[] = [],
+  painPoints: PainPoint[] = [],
 ): string {
   return `You are the DIVE AI Advisor, a strategic coach for university leaders planning AI adoption at their institution. You are embedded in the DIVE Transformation Hub workshop tool during a 4-day seminar in Ho Chi Minh City, Vietnam.
 
@@ -149,8 +165,11 @@ MODULE DATA:
 Module 1 — Maturity Diagnostic:
 ${dimensionSummary(dimensions, hiddenDimensions, customDimensions)}
 
+Module 2 — Top 3 Institutional Pain Points (from morning PESTEL/Barriers workshop):
+${painPointsSummary(painPoints)}
+
 Module 2 — Resistance Map:
-${stakeholderSummary(stakeholders)}
+${stakeholderSummary(stakeholders, painPoints)}
 
 Module 3 — Solutions Arsenal:
 ${solutionSummary(solutions)}

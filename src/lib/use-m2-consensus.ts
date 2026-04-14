@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { supabase } from './supabase';
-import type { Stakeholder } from '../types';
+import type { Stakeholder, PainPoint } from '../types';
 
 export function useM2Consensus(groupId: string | undefined) {
   const saveConsensus = useCallback(
@@ -48,5 +48,20 @@ export function useM2Consensus(groupId: string | undefined) {
     [groupId]
   );
 
-  return { saveConsensus, validateConsensus, requestReopen };
+  const savePainPoints = useCallback(
+    async (painPoints: PainPoint[]) => {
+      if (!groupId) return;
+      const { error } = await supabase.functions.invoke('group-data', {
+        body: {
+          action: 'save_pain_points',
+          group_id: groupId,
+          pain_points: painPoints,
+        },
+      });
+      if (error) console.error('save_pain_points error:', error);
+    },
+    [groupId]
+  );
+
+  return { saveConsensus, validateConsensus, requestReopen, savePainPoints };
 }

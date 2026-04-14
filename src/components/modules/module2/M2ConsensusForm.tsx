@@ -18,6 +18,9 @@ import type {
   ResistanceBehavior,
   AnxietyType,
   MissingLever,
+  PainPoint,
+  PestelCategory,
+  BarrierType,
 } from '../../../types';
 
 const SAVE_DEBOUNCE_MS = 2000;
@@ -57,16 +60,37 @@ async function generateAICounterMeasure(
     behavior?: ResistanceBehavior;
     anxiety?: AnxietyType;
     missing_lever?: MissingLever;
+    linked_pain_point_ids?: string[];
   },
   institutionName: string,
   maturitySummary: string,
+  painPoints: PainPoint[],
 ): Promise<string> {
+  // Build pain points context
+  const filledPainPoints = painPoints.filter((pp) => pp.text.trim());
+  const linkedPainPoints = filledPainPoints.filter((pp) =>
+    (stakeholder.linked_pain_point_ids || []).includes(pp.id)
+  );
+
+  const painPointsSection = filledPainPoints.length > 0
+    ? `\nINSTITUTIONAL PAIN POINTS (identified from morning PESTEL/Barriers workshop):
+${filledPainPoints.map((pp, i) => {
+  const pestel = pp.pestel_category ? ` [PESTEL: ${pp.pestel_category}]` : '';
+  const barrier = pp.barrier_type ? ` [${pp.barrier_type}]` : '';
+  return `  ${i + 1}. ${pp.text}${pestel}${barrier}`;
+}).join('\n')}
+${linkedPainPoints.length > 0
+  ? `\nThis stakeholder's resistance is directly linked to: ${linkedPainPoints.map((pp) => `"${pp.text}"`).join(', ')}. Ground your counter-measure in how their specific behavior/anxiety manifests in the context of these pain points.`
+  : '\nThis stakeholder has not been linked to a specific pain point — address the institutional context generally.'
+}`
+    : '';
+
   const systemPrompt = `You are the DIVE AI Advisor, generating a personalized counter-measure strategy for a specific stakeholder in a Vietnamese university's AI adoption plan.
 
 INSTITUTION: ${institutionName}
 
 MATURITY CONTEXT (from Module 1 diagnostic):
-${maturitySummary}
+${maturitySummary}${painPointsSection}
 
 RESEARCH BASE (use these to ground your recommendations):
 
@@ -204,11 +228,21 @@ interface Props {
   onRefetch: () => void;
 }
 
+const PESTEL_OPTIONS: { value: PestelCategory; label: string; color: string }[] = [
+  { value: 'P', label: 'Political', color: 'bg-blue-100 text-blue-700 border-blue-300' },
+  { value: 'E', label: 'Economic', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
+  { value: 'S', label: 'Social', color: 'bg-green-100 text-green-700 border-green-300' },
+  { value: 'T', label: 'Technological', color: 'bg-purple-100 text-purple-700 border-purple-300' },
+  { value: 'En', label: 'Environmental', color: 'bg-teal-100 text-teal-700 border-teal-300' },
+  { value: 'L', label: 'Legal', color: 'bg-red-100 text-red-700 border-red-300' },
+];
+
 export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: Props) {
   const { participant, group } = useAuth();
   const store = useStore();
-  const { saveConsensus, validateConsensus, requestReopen } = useM2Consensus(group?.id);
+  const { saveConsensus, validateConsensus, requestReopen, savePainPoints } = useM2Consensus(group?.id);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const painPointsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
   const status = groupData.consensusStatus;
@@ -220,6 +254,16 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(() => {
     if (groupData.consensusStakeholders.length > 0) return groupData.consensusStakeholders;
     return [];
+  });
+
+  // Pain points state — initialized from server data
+  const [painPoints, setPainPoints] = useState<PainPoint[]>(() => {
+    if (groupData.painPoints?.length > 0) return groupData.painPoints;
+    return [
+      { id: crypto.randomUUID(), text: '', pestel_category: undefined, barrier_type: undefined },
+      { id: crypto.randomUUID(), text: '', pestel_category: undefined, barrier_type: undefined },
+      { id: crypto.randomUUID(), text: '', pestel_category: undefined, barrier_type: undefined },
+    ];
   });
 
   const [saving, setSaving] = useState(false);
@@ -237,6 +281,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
     anxiety: undefined as AnxietyType | undefined,
     missing_lever: undefined as MissingLever | undefined,
     notes: '',
+    linked_pain_point_ids: [] as string[],
   });
 
   // Update local state when consensus data arrives from server
@@ -245,6 +290,26 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
       setStakeholders(groupData.consensusStakeholders);
     }
   }, [groupData.consensusStakeholders]);
+
+  // Sync pain points from server (only overwrite if server has data)
+  useEffect(() => {
+    if (groupData.painPoints?.length > 0) {
+      setPainPoints(groupData.painPoints);
+      store.setPainPoints(groupData.painPoints);
+    }
+  }, [groupData.painPoints]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const debouncedSavePainPoints = useCallback(
+    (newPainPoints: PainPoint[]) => {
+      if (!isEditable) return;
+      store.setPainPoints(newPainPoints);
+      if (painPointsTimer.current) clearTimeout(painPointsTimer.current);
+      painPointsTimer.current = setTimeout(() => {
+        savePainPoints(newPainPoints);
+      }, SAVE_DEBOUNCE_MS);
+    },
+    [isEditable, savePainPoints, store]
+  );
 
   // Debounced save + update store so chatbot sees data immediately
   const debouncedSave = useCallback(
@@ -285,12 +350,13 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
       missing_lever: form.missing_lever ?? undefined,
       notes: form.notes,
       generated_counter_measure: undefined,
+      linked_pain_point_ids: form.linked_pain_point_ids,
     };
 
     const updated = [...stakeholders, newStakeholder];
     setStakeholders(updated);
     debouncedSave(updated);
-    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '' });
+    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '', linked_pain_point_ids: [] });
     setShowForm(false);
   };
 
@@ -307,6 +373,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
       anxiety: s.anxiety ?? undefined,
       missing_lever: s.missing_lever ?? undefined,
       notes: s.notes || '',
+      linked_pain_point_ids: s.linked_pain_point_ids || [],
     });
     setShowForm(true);
     // Scroll to form after render
@@ -326,7 +393,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
     setStakeholders(updated);
     debouncedSave(updated);
     setEditingId(null);
-    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '' });
+    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '', linked_pain_point_ids: [] });
     setShowForm(false);
   };
 
@@ -347,9 +414,11 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
           behavior: s.behavior,
           anxiety: s.anxiety,
           missing_lever: s.missing_lever,
+          linked_pain_point_ids: s.linked_pain_point_ids,
         },
         store.institutionName,
         maturitySummary,
+        painPoints,
       );
       const updated = stakeholders.map((st) =>
         st.id === stakeholderId ? { ...st, generated_counter_measure: counterMeasure } : st
@@ -389,7 +458,10 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
   };
 
   useEffect(() => {
-    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (painPointsTimer.current) clearTimeout(painPointsTimer.current);
+    };
   }, []);
 
   const missingCounterMeasures = stakeholders.filter((s) => !s.generated_counter_measure).length;
@@ -446,6 +518,89 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
           Only the validator can edit. Discuss with your group and tell them what to change.
         </div>
       )}
+
+      {/* ── Step 0: Top 3 Pain Points ─────────────────────────── */}
+      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Step 0 — Top 3 Pain Points from this morning</span>
+          <Tooltip text="J. Parisse's workshop task: use the PESTEL and Barrier lists to identify the top 3 problems in your department. Enter them here — they will inform your stakeholder analysis and AI counter-measures." />
+        </div>
+        <p className="text-xs text-amber-600 mb-3">From J. Parisse's PESTEL + Barriers workshop — what are your institution's 3 main pain points for AI adoption?</p>
+        <div className="space-y-3">
+          {painPoints.map((pp, idx) => (
+            <div key={pp.id} className="bg-white rounded-lg border border-amber-200 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-[10px] font-bold flex items-center justify-center">{idx + 1}</span>
+                <input
+                  type="text"
+                  value={pp.text}
+                  disabled={!isEditable}
+                  onChange={(e) => {
+                    const updated = painPoints.map((p, i) => i === idx ? { ...p, text: e.target.value } : p);
+                    setPainPoints(updated);
+                    debouncedSavePainPoints(updated);
+                  }}
+                  placeholder={`Pain point #${idx + 1} — e.g., "No IT support for classroom tools"`}
+                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm focus:ring-1 focus:ring-amber-400 focus:border-amber-400 outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 ml-7">
+                {/* PESTEL category */}
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="text-[10px] text-gray-400 mr-0.5">PESTEL:</span>
+                  {PESTEL_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={!isEditable}
+                      onClick={() => {
+                        const updated = painPoints.map((p, i) =>
+                          i === idx ? { ...p, pestel_category: p.pestel_category === opt.value ? undefined : opt.value as PestelCategory } : p
+                        );
+                        setPainPoints(updated);
+                        debouncedSavePainPoints(updated);
+                      }}
+                      className={`px-1.5 py-0.5 rounded border text-[10px] font-medium transition-all disabled:opacity-50 ${
+                        pp.pestel_category === opt.value ? opt.color : 'bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {opt.value}
+                    </button>
+                  ))}
+                </div>
+                {/* Barrier type */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-gray-400 mr-0.5">Type:</span>
+                  {(['structural', 'behavioral'] as BarrierType[]).map((bt) => (
+                    <button
+                      key={bt}
+                      type="button"
+                      disabled={!isEditable}
+                      onClick={() => {
+                        const updated = painPoints.map((p, i) =>
+                          i === idx ? { ...p, barrier_type: p.barrier_type === bt ? undefined : bt } : p
+                        );
+                        setPainPoints(updated);
+                        debouncedSavePainPoints(updated);
+                      }}
+                      className={`px-1.5 py-0.5 rounded border text-[10px] font-medium capitalize transition-all disabled:opacity-50 ${
+                        pp.barrier_type === bt
+                          ? bt === 'structural' ? 'bg-blue-100 text-blue-700 border-blue-300' : 'bg-orange-100 text-orange-700 border-orange-300'
+                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {bt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {!isEditable && painPoints.every((pp) => !pp.text) && (
+          <p className="text-xs text-amber-500 italic mt-2">Waiting for the validator to enter the pain points...</p>
+        )}
+      </div>
 
       {/* Stakeholder list */}
       <div className={!isEditable && !isValidated ? 'opacity-60 pointer-events-none' : !isEditable ? '' : ''}>
@@ -753,6 +908,53 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
               </div>
             </div>
 
+            {/* Link to pain points */}
+            {painPoints.some((pp) => pp.text.trim()) && (
+              <div className="mb-4">
+                <label className="flex items-center text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">
+                  Linked Pain Points
+                  <Tooltip text="Is this person's resistance connected to one of your 3 institutional pain points? Select all that apply — Claude will use this to generate a more targeted counter-measure." />
+                </label>
+                <div className="space-y-1.5">
+                  {painPoints.filter((pp) => pp.text.trim()).map((pp) => {
+                    const isLinked = (form.linked_pain_point_ids || []).includes(pp.id);
+                    const pestelOpt = PESTEL_OPTIONS.find((o) => o.value === pp.pestel_category);
+                    return (
+                      <button
+                        key={pp.id}
+                        type="button"
+                        onClick={() => {
+                          const current = form.linked_pain_point_ids || [];
+                          const updated = isLinked
+                            ? current.filter((id) => id !== pp.id)
+                            : [...current, pp.id];
+                          setForm({ ...form, linked_pain_point_ids: updated });
+                        }}
+                        className={`w-full text-left flex items-start gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
+                          isLinked ? 'border-amber-400 bg-amber-50' : 'border-gray-200 hover:border-amber-300 bg-white'
+                        }`}
+                      >
+                        <span className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center ${
+                          isLinked ? 'border-amber-500 bg-amber-500' : 'border-gray-300'
+                        }`}>
+                          {isLinked && <CheckCircle size={10} className="text-white" />}
+                        </span>
+                        <span className="flex-1 text-gray-700">{pp.text}</span>
+                        {pestelOpt && (
+                          <span className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium border ${pestelOpt.color}`}>{pestelOpt.value}</span>
+                        )}
+                        {pp.barrier_type && (
+                          <span className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium capitalize border ${
+                            pp.barrier_type === 'structural' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-orange-50 text-orange-600 border-orange-200'
+                          }`}>{pp.barrier_type}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-600 mb-1">Notes (optional)</label>
               <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2}
@@ -774,7 +976,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
         )}
 
         {isEditable && !showForm && (
-          <button onClick={() => { setEditingId(null); setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '' }); setShowForm(true); }}
+          <button onClick={() => { setEditingId(null); setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '', linked_pain_point_ids: [] }); setShowForm(true); }}
             className="mt-4 flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 text-gray-500 text-sm font-medium rounded-lg hover:border-primary-400 hover:text-primary-600 transition-colors w-full justify-center">
             <Plus size={16} /> Add Stakeholder
           </button>

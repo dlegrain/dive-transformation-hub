@@ -40,6 +40,17 @@ export interface MaturityAssessment {
 // Module 2: Stakeholder Resistance Mapping
 // ============================================================
 
+// ── Pain Points (top 3 from Johan's morning session) ──────────
+export type PestelCategory = 'P' | 'E' | 'S' | 'T' | 'En' | 'L';
+export type BarrierType = 'structural' | 'behavioral';
+
+export interface PainPoint {
+  id: string;
+  text: string;
+  pestel_category?: PestelCategory;
+  barrier_type?: BarrierType;
+}
+
 export type StakeholderRole = 'Students' | 'Professors' | 'Administration' | 'Direction';
 export type Discipline = 'STEM' | 'Humanities' | 'Social Sciences' | 'Other';
 export type ResistanceBehavior = 'supportive' | 'pronounced_refusal' | 'pronounced_opposing' | 'subtle_undermining' | 'subtle_avoiding';
@@ -69,6 +80,7 @@ export interface Stakeholder {
   missing_lever?: MissingLever;    // optional — "I don't know" maps to undefined/null
   notes?: string;
   generated_counter_measure?: string;
+  linked_pain_point_ids?: string[];
   created_at?: string;
 }
 
@@ -218,6 +230,7 @@ export interface GroupStakeholderData {
   validatorId: string | null;
   completedCount: number;
   totalCount: number;
+  painPoints: PainPoint[];
 }
 
 export interface Participant {
