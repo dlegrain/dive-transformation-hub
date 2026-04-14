@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe, GraduationCap } from 'lucide-react';
+import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe, GraduationCap, Code2, GitBranch, Star } from 'lucide-react';
 
 const articles = [
   {
@@ -128,8 +128,18 @@ const moduleConfig: Record<number, { label: string; color: string; icon: React.E
   4: { label: 'Module 4 — 90-Day Plan', color: 'bg-green-100 text-green-700', icon: CalendarCheck },
 };
 
+const repos = [
+  {
+    name: 'DIVE Transformation Hub',
+    description: 'The source code of this app — a React/Supabase workshop tool for AI adoption strategy in Vietnamese higher education.',
+    url: 'https://github.com/dlegrain/dive-transformation-hub',
+    tags: ['React', 'Supabase', 'Tailwind', 'Claude API'],
+    color: 'blue',
+  },
+];
+
 export default function DocsPage() {
-  const [tab, setTab] = useState<'papers' | 'tutorials'>('papers');
+  const [tab, setTab] = useState<'papers' | 'tutorials' | 'code'>('papers');
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -139,7 +149,7 @@ export default function DocsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
         </div>
         <p className="text-gray-500 text-sm">
-          Research papers and hands-on tutorials for the seminar.
+          Research papers, hands-on tutorials, and open-source code for the seminar.
         </p>
       </div>
 
@@ -166,6 +176,17 @@ export default function DocsPage() {
         >
           <GraduationCap size={15} />
           AI Tutorials
+        </button>
+        <button
+          onClick={() => setTab('code')}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+            tab === 'code'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Code2 size={15} />
+          Code
         </button>
       </div>
 
@@ -261,6 +282,45 @@ export default function DocsPage() {
             </p>
           </div>
         </>
+      )}
+
+      {tab === 'code' && (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500 mb-6">
+            Open-source repositories built for this seminar. Feel free to explore, fork, and build on them.
+          </p>
+          {repos.map((repo) => (
+            <a
+              key={repo.url}
+              href={repo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-start gap-4 bg-white rounded-xl border border-gray-200 p-6 hover:border-blue-400 hover:shadow-md transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                <GitBranch size={20} className="text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="text-base font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                    {repo.name}
+                  </div>
+                  <Star size={13} className="text-gray-300 group-hover:text-yellow-400 transition-colors" />
+                </div>
+                <div className="text-sm text-gray-500 mb-3">{repo.description}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {repo.tags.map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full font-medium">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="text-xs text-blue-500 mt-2 font-medium">github.com/dlegrain/dive-transformation-hub</div>
+              </div>
+              <ExternalLink size={16} className="text-gray-300 group-hover:text-blue-500 shrink-0 mt-1" />
+            </a>
+          ))}
+        </div>
       )}
 
       {tab === 'tutorials' && (
