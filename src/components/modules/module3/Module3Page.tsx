@@ -1,8 +1,65 @@
 import { useState } from 'react';
-import { Plus, Trash2, GripVertical, Wrench } from 'lucide-react';
-import { SOLUTION_TEMPLATES } from '../../../lib/constants';
+import { Plus, Trash2, GripVertical, Wrench, AlertTriangle, Lightbulb } from 'lucide-react';
+import { SOLUTION_TEMPLATES, DIMENSIONS, MISSING_LEVERS } from '../../../lib/constants';
 import { useStore } from '../../../lib/store';
-import type { SolutionTarget, DifficultyLevel, SolutionStatus } from '../../../types';
+import type { SolutionTarget, DifficultyLevel, SolutionStatus, DimensionKey, DimensionAssessment } from '../../../types';
+
+function dimAvg(d: DimensionAssessment): number {
+  const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
+  return known.length > 0 ? known.reduce((a, b) => a + b, 0) / known.length : 0;
+}
+
+function M3ContextBanner({ dimensions, stakeholders }: {
+  dimensions: Record<DimensionKey, DimensionAssessment>;
+  stakeholders: ReturnType<typeof useStore>['effectiveStakeholders'];
+}) {
+  // Weakest M1 dimension
+  const scored = DIMENSIONS
+    .map((dim) => ({ dim, avg: dimAvg(dimensions[dim.key]) }))
+    .filter((x) => x.avg > 0)
+    .sort((a, b) => a.avg - b.avg);
+  const weakest = scored[0] ?? null;
+
+  // Most common missing lever among stakeholders
+  const leverCounts: Record<string, number> = {};
+  stakeholders.forEach((s) => {
+    if (s.missing_lever) leverCounts[s.missing_lever] = (leverCounts[s.missing_lever] ?? 0) + 1;
+  });
+  const topLeverValue = Object.entries(leverCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const topLever = topLeverValue ? MISSING_LEVERS.find((l) => l.value === topLeverValue) : null;
+
+  if (!weakest && !topLever) return null;
+
+  return (
+    <div className="mb-6 rounded-lg border border-primary-200 bg-primary-50 p-4 space-y-3">
+      <p className="text-xs font-semibold text-primary-700 uppercase tracking-wider">
+        Build something that matters — insights from your diagnostics
+      </p>
+      {weakest && (
+        <div className="flex items-start gap-2">
+          <AlertTriangle size={15} className="text-warning-500 mt-0.5 shrink-0" />
+          <p className="text-sm text-gray-700">
+            <span className="font-medium">Weakest M1 dimension:</span>{' '}
+            <span className="font-semibold text-warning-700">{weakest.dim.label}</span>{' '}
+            ({weakest.avg.toFixed(1)}/3). A prototype that addresses this dimension will have the highest strategic impact.{' '}
+            <span className="text-xs text-gray-500">(Bravo-Jaico et al., 2025)</span>
+          </p>
+        </div>
+      )}
+      {topLever && (
+        <div className="flex items-start gap-2">
+          <Lightbulb size={15} className="text-primary-500 mt-0.5 shrink-0" />
+          <p className="text-sm text-gray-700">
+            <span className="font-medium">Most common adoption barrier (M2):</span>{' '}
+            <span className="font-semibold text-primary-700">{topLever.label}</span>{' '}
+            — {topLever.description}. Build something that directly demonstrates this missing lever to your stakeholders.{' '}
+            <span className="text-xs text-gray-500">(Singh & Strzelecki, 2026)</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const difficultyColors: Record<DifficultyLevel, string> = {
   Low: 'bg-accent-100 text-accent-700 border-accent-200',
@@ -17,7 +74,7 @@ const statusColors: Record<SolutionStatus, string> = {
 };
 
 export default function Module3Page() {
-  const { solutions, setSolutions } = useStore();
+  const { solutions, setSolutions, effectiveDimensions, effectiveStakeholders } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     name: '',
@@ -110,6 +167,9 @@ export default function Module3Page() {
           Catalogue your AI use cases. Pick one quick win from this morning's roadmap and build it with vibe coding.
         </p>
       </div>
+
+      {/* M1/M2 context banner */}
+      <M3ContextBanner dimensions={effectiveDimensions} stakeholders={effectiveStakeholders} />
 
       {/* Quick-start templates */}
       {solutions.length === 0 && (
