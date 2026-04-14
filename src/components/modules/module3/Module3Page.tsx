@@ -62,6 +62,22 @@ function M3ContextBanner({ dimensions, stakeholders }: {
   );
 }
 
+// Simple markdown → HTML for policy/charter cards
+function renderMarkdown(text: string): string {
+  return text
+    .replace(/^### (.+)$/gm, '<h3 class="font-semibold text-gray-900 text-sm mt-3 mb-1">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="font-bold text-gray-900 text-sm mt-4 mb-1 border-b border-gray-100 pb-1">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="font-bold text-gray-900 text-base mt-4 mb-2">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li class="ml-3 text-xs text-gray-700">$1</li>')
+    .replace(/(<li.*<\/li>\n?)+/g, '<ul class="list-disc space-y-0.5 my-1">$&</ul>')
+    .replace(/\n\n/g, '<br/>')
+    .replace(/^(?!<[hul]|<br)(.+)$/gm, '<p class="text-xs text-gray-700 leading-relaxed">$1</p>');
+}
+
+const ARTIFACT_PLATFORMS = ['DIVE Policy Builder', 'DIVE Usage Mapping'];
+
 const difficultyColors: Record<DifficultyLevel, string> = {
   Low: 'bg-accent-100 text-accent-700 border-accent-200',
   Medium: 'bg-warning-100 text-warning-700 border-warning-200',
@@ -173,46 +189,52 @@ export default function Module3Page() {
       {/* M1/M2 context banner */}
       <M3ContextBanner dimensions={effectiveDimensions} stakeholders={effectiveStakeholders} />
 
-      {/* Quick-start templates */}
-      {solutions.length === 0 && (
-        <div className="mb-6 bg-primary-50 border border-primary-200 rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-primary-800 mb-3">
-            Quick Start — Use a Template
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {SOLUTION_TEMPLATES.map((t) => (
-              <button
-                key={t.name}
-                onClick={() => handleAddTemplate(t)}
-                className="text-left p-3 bg-white rounded-lg border border-primary-200 hover:border-primary-400 transition-colors"
-              >
-                <div className="text-sm font-medium text-gray-900">{t.name}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{t.target} · {t.difficulty}</div>
-              </button>
-            ))}
-          </div>
+      {/* Quick-start templates — always visible */}
+      <div className="mb-6 bg-primary-50 border border-primary-200 rounded-lg p-5">
+        <h3 className="text-sm font-semibold text-primary-800 mb-3">
+          Ideas — Add a template to your arsenal
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {SOLUTION_TEMPLATES.map((t) => (
+            <button
+              key={t.name}
+              onClick={() => handleAddTemplate(t)}
+              className="text-left p-3 bg-white rounded-lg border border-primary-200 hover:border-primary-400 transition-colors"
+            >
+              <div className="text-sm font-medium text-gray-900">{t.name}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{t.target} · {t.difficulty}</div>
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
-      {/* AI Policy Builder CTA */}
-      <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 flex items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <Shield size={18} className="text-primary-600 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-gray-900">AI Policy Builder</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Answer 5 questions → get a structured draft AI charter for your institution, ready to submit to your rector.
-              Then vibe-code a chatbot that answers questions about it.
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowPolicyBuilder(true)}
-          className="shrink-0 flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          <FileText size={14} />
-          Build Charter
-        </button>
+      {/* AI tools CTAs */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* AI Policy Builder */}
+        {(() => {
+          const hasCharter = solutions.some((s) => (s as any).platform_used === 'DIVE Policy Builder');
+          return (
+            <div className={`rounded-lg border p-4 flex items-center justify-between gap-3 ${hasCharter ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-gray-50'}`}>
+              <div className="flex items-start gap-3">
+                <Shield size={18} className="text-primary-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">AI Policy Builder</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {hasCharter ? 'Charter saved — click to edit or download.' : '5 questions → draft AI charter ready to submit to your rector.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPolicyBuilder(true)}
+                className={`shrink-0 flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${hasCharter ? 'bg-white border border-primary-300 text-primary-700 hover:bg-primary-100' : 'bg-primary-600 text-white hover:bg-primary-700'}`}
+              >
+                <FileText size={13} />
+                {hasCharter ? 'Open Charter' : 'Build Charter'}
+              </button>
+            </div>
+          );
+        })()}
+
       </div>
 
       {/* Solution cards grid */}
@@ -253,38 +275,52 @@ export default function Module3Page() {
               <p className="text-sm text-gray-600 mb-3">{sol.problem_solved}</p>
             )}
 
-            {/* Status toggle */}
-            <div className="flex gap-1 mb-3">
-              {(['Planned', 'Prototyped', 'Tested'] as SolutionStatus[]).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => handleUpdateStatus(sol.id!, status)}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                    sol.status === status
-                      ? statusColors[status]
-                      : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-
-            {/* Vibe coding notes (expandable) */}
-            {(sol.status === 'Prototyped' || sol.status === 'Tested') && (
-              <div className="border-t border-gray-100 pt-3">
-                <div className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
-                  <Wrench size={12} />
-                  Vibe Coding Notes
+            {/* Artifact cards (policy / usage map): render markdown, no status toggle */}
+            {ARTIFACT_PLATFORMS.includes(sol.platform_used ?? '') ? (
+              sol.vibe_coding_notes && (
+                <div className="border-t border-gray-100 pt-3 max-h-48 overflow-y-auto">
+                  <div
+                    className="text-xs leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(sol.vibe_coding_notes) }}
+                  />
                 </div>
-                <textarea
-                  value={sol.vibe_coding_notes || ''}
-                  onChange={(e) => handleUpdateNotes(sol.id!, e.target.value)}
-                  rows={2}
-                  placeholder="What did you build? What worked?"
-                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-primary-500 outline-none resize-none"
-                />
-              </div>
+              )
+            ) : (
+              <>
+                {/* Status toggle */}
+                <div className="flex gap-1 mb-3">
+                  {(['Planned', 'Prototyped', 'Tested'] as SolutionStatus[]).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => handleUpdateStatus(sol.id!, status)}
+                      className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
+                        sol.status === status
+                          ? statusColors[status]
+                          : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Vibe coding notes */}
+                {(sol.status === 'Prototyped' || sol.status === 'Tested') && (
+                  <div className="border-t border-gray-100 pt-3">
+                    <div className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
+                      <Wrench size={12} />
+                      Vibe Coding Notes
+                    </div>
+                    <textarea
+                      value={sol.vibe_coding_notes || ''}
+                      onChange={(e) => handleUpdateNotes(sol.id!, e.target.value)}
+                      rows={2}
+                      placeholder="What did you build? What worked?"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-primary-500 outline-none resize-none"
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         ))}
@@ -373,6 +409,7 @@ export default function Module3Page() {
       {showPolicyBuilder && (
         <PolicyBuilderModal onClose={() => setShowPolicyBuilder(false)} />
       )}
+
     </div>
   );
 }

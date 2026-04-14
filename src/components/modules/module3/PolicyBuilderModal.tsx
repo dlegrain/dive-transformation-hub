@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, ChevronRight, ChevronLeft, FileText, ExternalLink, Loader2, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, ChevronRight, ChevronLeft, FileText, ExternalLink, Loader2, CheckCircle, Eye, Pencil, Download, Save } from 'lucide-react';
 import { useStore } from '../../../lib/store';
 import { generatePolicyDraft, type PolicyAnswers } from '../../../lib/ai-advisor';
 import type { SolutionTarget, DifficultyLevel } from '../../../types';
@@ -45,6 +45,21 @@ const POSTURE_OPTIONS = [
   },
 ];
 
+// ── Markdown renderer ─────────────────────────────────────────────────────────
+
+function renderMarkdown(text: string): string {
+  return text
+    .replace(/^### (.+)$/gm, '<h3 class="font-semibold text-gray-900 text-sm mt-3 mb-1">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="font-bold text-gray-900 text-sm mt-4 mb-1 border-b border-gray-100 pb-1">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="font-bold text-gray-900 text-base mt-4 mb-2">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li class="ml-3 text-xs text-gray-700">$1</li>')
+    .replace(/(<li.*<\/li>\n?)+/g, '<ul class="list-disc space-y-0.5 my-1">$&</ul>')
+    .replace(/\n\n/g, '<br/>')
+    .replace(/^(?!<[hul]|<br)(.+)$/gm, '<p class="text-xs text-gray-700 leading-relaxed my-0.5">$1</p>');
+}
+
 // ── Pedagogical insight boxes ─────────────────────────────────────────────────
 
 function InsightBox({ children }: { children: React.ReactNode }) {
@@ -62,9 +77,12 @@ interface PolicyBuilderModalProps {
 }
 
 export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps) {
-  const { setSolutions, institutionName } = useStore();
+  const { solutions, setSolutions, institutionName } = useStore();
 
-  const [step, setStep] = useState(0); // 0-4 = questions, 5 = generating, 6 = done
+  // Find existing charter card (if already saved)
+  const existingCard = solutions.find((s) => s.platform_used === 'DIVE Policy Builder') ?? null;
+
+  const [step, setStep] = useState<number>(existingCard ? 6 : 0);
   const [answers, setAnswers] = useState<PolicyAnswers>({
     institutionType: '',
     studentPopulation: '',
@@ -72,11 +90,23 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
     topConcerns: [],
     posture: 'guided',
     responsibleBody: '',
+    ...((existingCard?.policy_answers as Partial<PolicyAnswers>) ?? {}),
   });
-  const [generatedDraft, setGeneratedDraft] = useState<string>('');
+  const [generatedDraft, setGeneratedDraft] = useState<string>(existingCard?.vibe_coding_notes ?? '');
   const [error, setError] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState(true);
+  const [saved, setSaved] = useState<boolean>(!!existingCard);
 
   const TOTAL_STEPS = 5;
+
+  // Keep draft in sync if another group member updates the card via Realtime
+  useEffect(() => {
+    const card = solutions.find((s) => s.platform_used === 'DIVE Policy Builder');
+    if (card && card.vibe_coding_notes && card.vibe_coding_notes !== generatedDraft) {
+      setGeneratedDraft(card.vibe_coding_notes);
+      setSaved(true);
+    }
+  }, [solutions]);
 
   const toggleMulti = (field: 'observedUses' | 'topConcerns', value: string) => {
     setAnswers((prev) => {
@@ -95,7 +125,7 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
       case 0: return answers.institutionType.trim().length > 0;
       case 1: return answers.observedUses.length > 0;
       case 2: return answers.topConcerns.length > 0;
-      case 3: return true; // posture always has a default
+      case 3: return true;
       case 4: return answers.responsibleBody.trim().length > 0;
       default: return false;
     }
@@ -107,6 +137,7 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
     try {
       const draft = await generatePolicyDraft(answers, institutionName);
       setGeneratedDraft(draft);
+      setSaved(false);
       setStep(6);
     } catch (e) {
       setError('Generation failed. Please try again.');
@@ -114,27 +145,42 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
     }
   };
 
+  const handleDownload = () => {
+    const blob = new Blob([generatedDraft], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AI-Charter-${institutionName || 'draft'}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleSave = () => {
-    setSolutions((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        group_id: '',
-        name: 'AI Policy Charter',
-        target: 'Administration' as SolutionTarget,
-        difficulty: 'Low' as DifficultyLevel,
-        status: 'Planned',
-        problem_solved:
-          'An institutional AI charter structured around 5 principles: scope, acceptable use, transparency, data protection, and academic integrity.',
-        vibe_coding_notes: generatedDraft,
-        platform_used: 'DIVE Policy Builder',
-        assigned_phase: 1,
-        sort_order: prev.length,
-        policy_draft: generatedDraft,
-        policy_answers: answers,
-      } as any,
-    ]);
-    onClose();
+    const cardData = {
+      group_id: '',
+      name: 'AI Policy Charter',
+      target: 'Administration' as SolutionTarget,
+      difficulty: 'Low' as DifficultyLevel,
+      status: 'Planned',
+      problem_solved: 'An institutional AI charter structured around 5 principles: scope, acceptable use, transparency, data protection, and academic integrity.',
+      vibe_coding_notes: generatedDraft,
+      platform_used: 'DIVE Policy Builder',
+      assigned_phase: 1,
+      policy_draft: generatedDraft,
+      policy_answers: answers,
+    };
+
+    setSolutions((prev) => {
+      const idx = prev.findIndex((s) => (s as any).platform_used === 'DIVE Policy Builder');
+      if (idx >= 0) {
+        // Update existing card
+        return prev.map((s, i) => i === idx ? { ...s, ...cardData } : s);
+      }
+      // Create new card
+      return [...prev, { id: crypto.randomUUID(), sort_order: prev.length, ...cardData } as any];
+    });
+    setSaved(true);
+    // Modal stays open — user can still edit or download
   };
 
   return (
@@ -149,10 +195,17 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
             {step < TOTAL_STEPS && (
               <span className="text-xs text-gray-400 ml-1">Step {step + 1} of {TOTAL_STEPS}</span>
             )}
+            {saved && step === 6 && (
+              <span className="flex items-center gap-1 text-xs text-accent-600 font-medium ml-1">
+                <CheckCircle size={12} /> Saved
+              </span>
+            )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
-          </button>
+          {step !== 5 && (
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X size={18} />
+            </button>
+          )}
         </div>
 
         {/* Progress bar */}
@@ -345,25 +398,51 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
               <p className="text-sm text-gray-500 mt-1">
                 Based on the Sorbonne Paris 1 framework, UNamur research, and Vietnam MoET guidelines.
               </p>
+              <div className="mt-6 flex items-center gap-2 px-4 py-2.5 bg-warning-50 border border-warning-200 rounded-lg text-sm text-warning-800 font-medium">
+                <span>⚠️</span> Please do not close this window
+              </div>
             </div>
           )}
 
-          {/* Step 6 — Generated draft */}
+          {/* Step 6 — Draft (edit / preview) */}
           {step === 6 && (
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle size={16} className="text-accent-600" />
-                <span className="font-semibold text-gray-900">Your draft charter is ready</span>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-gray-500">
+                  {saved
+                    ? 'Shared with your group. Edit below and save again to update.'
+                    : 'Review and edit, then save to share with your group.'}
+                </p>
+                <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-0.5 shrink-0">
+                  <button
+                    onClick={() => setPreviewMode(true)}
+                    className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md transition-colors ${previewMode ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <Eye size={11} /> Preview
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode(false)}
+                    className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md transition-colors ${!previewMode ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <Pencil size={11} /> Edit
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mb-3">
-                Review and edit below. This will be saved to your Module 3 cards and exported in your Day 4 PDF.
-              </p>
-              <textarea
-                value={generatedDraft}
-                onChange={(e) => setGeneratedDraft(e.target.value)}
-                rows={18}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none font-mono leading-relaxed"
-              />
+
+              {previewMode ? (
+                <div
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 min-h-[18rem] overflow-y-auto"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(generatedDraft) }}
+                />
+              ) : (
+                <textarea
+                  value={generatedDraft}
+                  onChange={(e) => { setGeneratedDraft(e.target.value); setSaved(false); }}
+                  rows={18}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none font-mono leading-relaxed"
+                />
+              )}
+
               <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-400">
                 <a href="https://droit.pantheonsorbonne.fr/sites/default/files/2025-10/2025-Charte%20IA-VF%20EDS-Septembre2025.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary-600">
                   <ExternalLink size={10} /> Sorbonne Charter (2025)
@@ -382,37 +461,53 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
-          <button
-            onClick={() => step > 0 && step < 5 ? setStep(step - 1) : onClose()}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            {step === 0 ? 'Cancel' : step === 6 ? 'Back' : (
-              <span className="flex items-center gap-1"><ChevronLeft size={14} /> Back</span>
-            )}
-          </button>
-
-          {step < TOTAL_STEPS && (
+          {/* Left */}
+          {step !== 5 && (
             <button
-              onClick={() => step === TOTAL_STEPS - 1 ? handleGenerate() : setStep(step + 1)}
-              disabled={!canProceed()}
-              className="flex items-center gap-1.5 px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors"
+              onClick={() => step > 0 && step < 5 ? setStep(step - 1) : onClose()}
+              className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              {step === TOTAL_STEPS - 1 ? (
-                <>Generate Charter <FileText size={14} /></>
-              ) : (
-                <>Next <ChevronRight size={14} /></>
+              {step === 0 || step === 6 ? 'Close' : (
+                <span className="flex items-center gap-1"><ChevronLeft size={14} /> Back</span>
               )}
             </button>
           )}
+          {step === 5 && <div />}
 
-          {step === 6 && (
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-1.5 px-5 py-2 bg-accent-600 text-white text-sm font-medium rounded-lg hover:bg-accent-700 transition-colors"
-            >
-              <CheckCircle size={14} /> Save to Module 3
-            </button>
-          )}
+          {/* Right */}
+          <div className="flex items-center gap-2">
+            {step < TOTAL_STEPS && (
+              <button
+                onClick={() => step === TOTAL_STEPS - 1 ? handleGenerate() : setStep(step + 1)}
+                disabled={!canProceed()}
+                className="flex items-center gap-1.5 px-5 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors"
+              >
+                {step === TOTAL_STEPS - 1 ? (
+                  <>Generate Charter <FileText size={14} /></>
+                ) : (
+                  <>Next <ChevronRight size={14} /></>
+                )}
+              </button>
+            )}
+
+            {step === 6 && (
+              <>
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Download size={14} /> Download .md
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saved}
+                  className="flex items-center gap-1.5 px-5 py-2 bg-accent-600 text-white text-sm font-medium rounded-lg hover:bg-accent-700 disabled:opacity-50 transition-colors"
+                >
+                  {saved ? <><CheckCircle size={14} /> Saved</> : <><Save size={14} /> Save & share</>}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
       </div>

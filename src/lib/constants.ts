@@ -158,6 +158,7 @@ export const SOLUTION_TEMPLATES = [
   { name: 'Rubric Builder', target: 'Professors', difficulty: 'Low', problemSolved: 'Generate detailed grading rubrics with criteria and levels from an assignment description' },
   { name: 'Email Drafter', target: 'Administration', difficulty: 'Low', problemSolved: 'Draft official communications (announcements, invitations, notices) from bullet points' },
   { name: 'Policy Q&A Bot', target: 'Administration', difficulty: 'Low', problemSolved: 'Answer staff and student questions about internal regulations — just upload the policy document as context' },
+  { name: 'AI Usage Mapping Survey', target: 'Administration', difficulty: 'Low', problemSolved: 'Questionnaire to map current AI usage across your institution — tools used, use cases, barriers, and readiness level. Creates a baseline for your transformation roadmap.' },
 ] as const;
 
 // ============================================================
