@@ -247,6 +247,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
   const { saveConsensus, validateConsensus, requestReopen, savePainPoints } = useM2Consensus(group?.id);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const painPointsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isPainPointsTyping = useRef(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   const status = groupData.consensusStatus;
@@ -295,9 +296,9 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
     }
   }, [groupData.consensusStakeholders]);
 
-  // Sync pain points from server (only overwrite if server has data)
+  // Sync pain points from server (only overwrite if server has data and user is not typing)
   useEffect(() => {
-    if (groupData.painPoints?.length > 0) {
+    if (groupData.painPoints?.length > 0 && !isPainPointsTyping.current) {
       setPainPoints(groupData.painPoints);
       store.setPainPoints(groupData.painPoints);
     }
@@ -305,10 +306,12 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
 
   const debouncedSavePainPoints = useCallback(
     (newPainPoints: PainPoint[]) => {
+      isPainPointsTyping.current = true;
       store.setPainPoints(newPainPoints);
       if (painPointsTimer.current) clearTimeout(painPointsTimer.current);
       painPointsTimer.current = setTimeout(() => {
         savePainPoints(newPainPoints);
+        isPainPointsTyping.current = false;
       }, SAVE_DEBOUNCE_MS);
     },
     [savePainPoints, store]
