@@ -64,9 +64,9 @@ export interface Stakeholder {
   discipline?: Discipline;
   power?: PowerLevel;
   interest?: InterestLevel;
-  behavior: ResistanceBehavior;
-  anxiety: AnxietyType;
-  missing_lever: MissingLever;
+  behavior?: ResistanceBehavior;   // optional — "I don't know" maps to undefined/null
+  anxiety?: AnxietyType;           // optional — "I don't know" maps to undefined/null
+  missing_lever?: MissingLever;    // optional — "I don't know" maps to undefined/null
   notes?: string;
   generated_counter_measure?: string;
   created_at?: string;

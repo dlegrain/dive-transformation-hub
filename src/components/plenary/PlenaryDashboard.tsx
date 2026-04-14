@@ -457,7 +457,7 @@ function ResistanceTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
     count: stakeholders.filter((s) => s.role === r).length,
   })).filter((r) => r.count > 0);
 
-  const resistantCount = stakeholders.filter((s) => s.behavior !== 'supportive').length;
+  const resistantCount = stakeholders.filter((s) => s.behavior && s.behavior !== 'supportive').length;
   const supportiveCount = stakeholders.filter((s) => s.behavior === 'supportive').length;
 
   return (

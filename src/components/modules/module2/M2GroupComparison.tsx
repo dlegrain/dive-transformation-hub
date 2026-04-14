@@ -111,7 +111,7 @@ export default function M2GroupComparison({ groupData }: Props) {
               </div>
               <div>
                 <div className="text-xl font-bold text-danger-600">
-                  {individualStakeholders.filter((s) => s.behavior.startsWith('subtle')).length}
+                  {individualStakeholders.filter((s) => s.behavior?.startsWith('subtle')).length}
                 </div>
                 <div className="text-xs text-gray-500">Subtle resistance</div>
               </div>

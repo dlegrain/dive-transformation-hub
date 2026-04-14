@@ -54,9 +54,9 @@ async function generateAICounterMeasure(
     discipline?: Discipline;
     power?: PowerLevel;
     interest?: InterestLevel;
-    behavior: ResistanceBehavior;
-    anxiety: AnxietyType;
-    missing_lever: MissingLever;
+    behavior?: ResistanceBehavior;
+    anxiety?: AnxietyType;
+    missing_lever?: MissingLever;
   },
   institutionName: string,
   maturitySummary: string,
@@ -107,9 +107,14 @@ RULES:
 - Do NOT use markdown bold (**) or headers — write plain flowing text
 - Language: English`;
 
+  // Asymmetric rule: block if behavior unknown, allow partial if anxiety/lever unknown
+  if (!stakeholder.behavior) {
+    throw new Error('BEHAVIOR_UNKNOWN');
+  }
+
   const behaviorEntry = RESISTANCE_BEHAVIORS.find((b) => b.value === stakeholder.behavior);
-  const anxietyEntry = ANXIETY_TYPES.find((a) => a.value === stakeholder.anxiety);
-  const leverEntry = MISSING_LEVERS.find((l) => l.value === stakeholder.missing_lever);
+  const anxietyEntry = stakeholder.anxiety ? ANXIETY_TYPES.find((a) => a.value === stakeholder.anxiety) : null;
+  const leverEntry = stakeholder.missing_lever ? MISSING_LEVERS.find((l) => l.value === stakeholder.missing_lever) : null;
   const powerEntry = stakeholder.power ? POWER_LEVELS.find((p) => p.value === stakeholder.power) : null;
   const interestEntry = stakeholder.interest ? INTEREST_LEVELS.find((i) => i.value === stakeholder.interest) : null;
 
@@ -134,18 +139,14 @@ RULES:
 - Description: ${behaviorEntry?.description || ''}
 - Severity: ${(behaviorEntry as { severity?: string })?.severity || 'unknown'}
 
-**Lens 2 — Root Cause (AI Anxiety):** ${anxietyEntry?.label || 'Unknown'}
-- Description: ${anxietyEntry?.description || ''}
-- Source: ${anxietyEntry?.source || ''}
+**Lens 2 — Root Cause (AI Anxiety):** ${anxietyEntry ? `${anxietyEntry.label} — ${anxietyEntry.description} (${anxietyEntry.source})` : 'Unknown — the group could not determine the root anxiety. Acknowledge this uncertainty in your strategy and offer a diagnosis question the group could ask the stakeholder to clarify.'}
 
-**Lens 3 — Missing Adoption Lever:** ${leverEntry?.label || 'Unknown'}
-- Description: ${leverEntry?.description || ''}
-- Source: ${(leverEntry as { source?: string })?.source || ''}
+**Lens 3 — Missing Adoption Lever:** ${leverEntry ? `${leverEntry.label} — ${leverEntry.description}` : 'Unknown — the group could not identify the missing lever. Acknowledge this and suggest 2 likely candidates based on the role and behavior.'}
 
 Generate a strategy that specifically addresses:
 1. HOW to approach this person given their resistance behavior
-2. WHY they resist (the root anxiety) and how to address that specific fear
-3. WHAT concrete action would provide the missing lever
+2. WHY they resist (the root anxiety) and how to address that specific fear${!anxietyEntry ? ' — anxiety is unknown, flag this and suggest a diagnostic question' : ''}
+3. WHAT concrete action would provide the missing lever${!leverEntry ? ' — lever is unknown, suggest the 2 most likely candidates given the role' : ''}
 4. Their position in the Power/Interest matrix and what that means for prioritization`;
 
   try {
@@ -232,9 +233,9 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
     discipline: 'Other' as Discipline,
     power: 'low' as PowerLevel,
     interest: 'high' as InterestLevel,
-    behavior: 'subtle_avoiding' as ResistanceBehavior,
-    anxiety: 'learning' as AnxietyType,
-    missing_lever: 'relative_advantage' as MissingLever,
+    behavior: undefined as ResistanceBehavior | undefined,
+    anxiety: undefined as AnxietyType | undefined,
+    missing_lever: undefined as MissingLever | undefined,
     notes: '',
   });
 
@@ -279,9 +280,9 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
       discipline: form.discipline,
       power: form.power,
       interest: form.interest,
-      behavior: form.behavior,
-      anxiety: form.anxiety,
-      missing_lever: form.missing_lever,
+      behavior: form.behavior ?? undefined,
+      anxiety: form.anxiety ?? undefined,
+      missing_lever: form.missing_lever ?? undefined,
       notes: form.notes,
       generated_counter_measure: undefined,
     };
@@ -289,7 +290,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
     const updated = [...stakeholders, newStakeholder];
     setStakeholders(updated);
     debouncedSave(updated);
-    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: 'subtle_avoiding', anxiety: 'learning', missing_lever: 'relative_advantage', notes: '' });
+    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '' });
     setShowForm(false);
   };
 
@@ -302,9 +303,9 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
       discipline: s.discipline || 'Other',
       power: s.power || 'low',
       interest: s.interest || 'high',
-      behavior: s.behavior,
-      anxiety: s.anxiety,
-      missing_lever: s.missing_lever,
+      behavior: s.behavior ?? undefined,
+      anxiety: s.anxiety ?? undefined,
+      missing_lever: s.missing_lever ?? undefined,
       notes: s.notes || '',
     });
     setShowForm(true);
@@ -325,41 +326,46 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
     setStakeholders(updated);
     debouncedSave(updated);
     setEditingId(null);
-    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: 'subtle_avoiding', anxiety: 'learning', missing_lever: 'relative_advantage', notes: '' });
+    setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '' });
     setShowForm(false);
   };
 
   // Generate AI counter-measure for a single stakeholder
   const handleGenerateCounterMeasure = async (stakeholderId: string) => {
     const s = stakeholders.find((st) => st.id === stakeholderId);
-    if (!s) return;
+    if (!s || !s.behavior) return; // block if behavior unknown
     setGeneratingCM(stakeholderId);
-    const maturitySummary = buildMaturitySummary(store);
-    const counterMeasure = await generateAICounterMeasure(
-      {
-        name: s.name,
-        role: s.role,
-        discipline: s.discipline,
-        power: s.power,
-        interest: s.interest,
-        behavior: s.behavior,
-        anxiety: s.anxiety,
-        missing_lever: s.missing_lever,
-      },
-      store.institutionName,
-      maturitySummary,
-    );
-    const updated = stakeholders.map((st) =>
-      st.id === stakeholderId ? { ...st, generated_counter_measure: counterMeasure } : st
-    );
-    setStakeholders(updated);
-    debouncedSave(updated);
-    setGeneratingCM(null);
+    try {
+      const maturitySummary = buildMaturitySummary(store);
+      const counterMeasure = await generateAICounterMeasure(
+        {
+          name: s.name,
+          role: s.role,
+          discipline: s.discipline,
+          power: s.power,
+          interest: s.interest,
+          behavior: s.behavior,
+          anxiety: s.anxiety,
+          missing_lever: s.missing_lever,
+        },
+        store.institutionName,
+        maturitySummary,
+      );
+      const updated = stakeholders.map((st) =>
+        st.id === stakeholderId ? { ...st, generated_counter_measure: counterMeasure } : st
+      );
+      setStakeholders(updated);
+      debouncedSave(updated);
+    } catch {
+      // generation failed silently
+    } finally {
+      setGeneratingCM(null);
+    }
   };
 
-  // Generate all counter-measures at once
+  // Generate all counter-measures at once (skip those without behavior)
   const handleGenerateAll = async () => {
-    const toGenerate = stakeholders.filter((s) => !s.generated_counter_measure);
+    const toGenerate = stakeholders.filter((s) => !s.generated_counter_measure && s.behavior);
     for (const s of toGenerate) {
       await handleGenerateCounterMeasure(s.id!);
     }
@@ -525,8 +531,9 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                   {isEditable && (
                     <button
                       onClick={() => handleGenerateCounterMeasure(s.id!)}
-                      disabled={generatingCM !== null}
-                      className="mt-2 text-[10px] text-gray-400 hover:text-primary-500 underline"
+                      disabled={generatingCM !== null || !s.behavior}
+                      className="mt-2 text-[10px] text-gray-400 hover:text-primary-500 underline disabled:opacity-40 disabled:cursor-not-allowed"
+                      title={!s.behavior ? 'Set Lens 1 (behavior) to enable regeneration' : 'Regenerate counter-measure'}
                     >
                       Regenerate
                     </button>
@@ -534,17 +541,21 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                 </div>
               ) : (
                 isEditable && (
-                  <button
-                    onClick={() => handleGenerateCounterMeasure(s.id!)}
-                    disabled={generatingCM !== null}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-600 text-xs font-medium rounded-lg border border-primary-200 transition-colors disabled:opacity-50"
-                  >
-                    {generatingCM === s.id ? (
-                      <><Loader2 size={12} className="animate-spin" /> Generating...</>
-                    ) : (
-                      <><Sparkles size={12} /> Generate AI Counter-Measure</>
-                    )}
-                  </button>
+                  s.behavior ? (
+                    <button
+                      onClick={() => handleGenerateCounterMeasure(s.id!)}
+                      disabled={generatingCM !== null}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-600 text-xs font-medium rounded-lg border border-primary-200 transition-colors disabled:opacity-50"
+                    >
+                      {generatingCM === s.id ? (
+                        <><Loader2 size={12} className="animate-spin" /> Generating...</>
+                      ) : (
+                        <><Sparkles size={12} /> Generate AI Counter-Measure</>
+                      )}
+                    </button>
+                  ) : (
+                    <p className="text-[10px] text-warning-600 italic">Set Lens 1 (behavior) to generate a counter-measure.</p>
+                  )
                 )
               )}
             </div>
@@ -655,6 +666,9 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                   Lens 1: How do they resist?
                   <Tooltip text="Deacon et al. (2025) identified 4 resistance behaviors in universities. Subtle forms are more dangerous because they're invisible until it's too late. 'Supportive' means this person is an ally — a valuable asset to leverage." />
                 </label>
+                {!form.behavior && (
+                  <p className="text-xs text-warning-600 mb-2 font-medium">⚠ Required — counter-measure generation is blocked until this is filled.</p>
+                )}
                 <div className="grid grid-cols-2 gap-2">
                   {RESISTANCE_BEHAVIORS.map((b) => (
                     <button key={b.value} onClick={() => setForm({ ...form, behavior: b.value as ResistanceBehavior })}
@@ -667,6 +681,13 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                       <div className="text-xs text-gray-500 mt-0.5">{b.description}</div>
                     </button>
                   ))}
+                  <button onClick={() => setForm({ ...form, behavior: undefined })}
+                    className={`text-left p-3 rounded-lg border text-sm transition-all col-span-2 ${
+                      form.behavior === undefined ? 'border-gray-400 bg-gray-100' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
+                    <div className="font-medium text-gray-500">I don't know yet</div>
+                    <div className="text-xs text-gray-400 mt-0.5">Counter-measure generation will be unavailable until this is filled.</div>
+                  </button>
                 </div>
               </div>
 
@@ -688,6 +709,13 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                       <div className="text-[10px] text-gray-400 mt-1">{a.source}</div>
                     </button>
                   ))}
+                  <button onClick={() => setForm({ ...form, anxiety: undefined })}
+                    className={`text-left p-3 rounded-lg border text-sm transition-all col-span-2 ${
+                      form.anxiety === undefined ? 'border-gray-400 bg-gray-100' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
+                    <div className="font-medium text-gray-500">I don't know yet</div>
+                    <div className="text-xs text-gray-400 mt-0.5">Counter-measure can still be generated — Claude will note the uncertainty.</div>
+                  </button>
                 </div>
               </div>
 
@@ -714,6 +742,13 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                       <div className="text-xs text-gray-500 mt-0.5">{l.description}</div>
                     </button>
                   ))}
+                  <button onClick={() => setForm({ ...form, missing_lever: undefined })}
+                    className={`text-left p-3 rounded-lg border text-sm transition-all col-span-3 ${
+                      form.missing_lever === undefined ? 'border-gray-400 bg-gray-100' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
+                    <div className="font-medium text-gray-500">I don't know yet</div>
+                    <div className="text-xs text-gray-400 mt-0.5">Counter-measure can still be generated — Claude will note the uncertainty.</div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -739,7 +774,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
         )}
 
         {isEditable && !showForm && (
-          <button onClick={() => { setEditingId(null); setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: 'subtle_avoiding', anxiety: 'learning', missing_lever: 'relative_advantage', notes: '' }); setShowForm(true); }}
+          <button onClick={() => { setEditingId(null); setForm({ name: '', role: 'Professors', discipline: 'Other', power: 'low', interest: 'high', behavior: undefined, anxiety: undefined, missing_lever: undefined, notes: '' }); setShowForm(true); }}
             className="mt-4 flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 text-gray-500 text-sm font-medium rounded-lg hover:border-primary-400 hover:text-primary-600 transition-colors w-full justify-center">
             <Plus size={16} /> Add Stakeholder
           </button>
@@ -759,7 +794,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
             </div>
             <div>
               <div className="text-xl font-bold text-danger-600">
-                {stakeholders.filter((s) => s.behavior.startsWith('subtle')).length}
+                {stakeholders.filter((s) => s.behavior?.startsWith('subtle')).length}
               </div>
               <div className="text-xs text-gray-500">Subtle resistance</div>
             </div>

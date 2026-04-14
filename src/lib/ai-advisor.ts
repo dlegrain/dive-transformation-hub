@@ -57,9 +57,9 @@ function stakeholderSummary(stakeholders: Stakeholder[]): string {
   if (stakeholders.length === 0) return '  (No stakeholders mapped yet)';
   return stakeholders
     .map((s) => {
-      const behavior = RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label;
-      const anxiety = ANXIETY_TYPES.find((a) => a.value === s.anxiety)?.label;
-      const lever = MISSING_LEVERS.find((l) => l.value === s.missing_lever)?.label;
+      const behavior = s.behavior ? RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label : 'Unknown (group unsure)';
+      const anxiety = s.anxiety ? ANXIETY_TYPES.find((a) => a.value === s.anxiety)?.label : 'Unknown (group unsure)';
+      const lever = s.missing_lever ? MISSING_LEVERS.find((l) => l.value === s.missing_lever)?.label : 'Unknown (group unsure)';
       const powerLabel = s.power ? POWER_LEVELS.find((p) => p.value === s.power)?.label : null;
       const interestLabel = s.interest ? INTEREST_LEVELS.find((i) => i.value === s.interest)?.label : null;
       const quadrant = s.power && s.interest
