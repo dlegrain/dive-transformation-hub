@@ -854,7 +854,11 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                 )}
                 <div className="grid grid-cols-2 gap-2">
                   {RESISTANCE_BEHAVIORS.map((b) => (
-                    <button key={b.value} onClick={() => setForm({ ...form, behavior: b.value as ResistanceBehavior })}
+                    <button key={b.value} onClick={() => setForm({
+                      ...form,
+                      behavior: b.value as ResistanceBehavior,
+                      ...(b.value === 'supportive' ? { anxiety: undefined, missing_lever: undefined } : {}),
+                    })}
                       className={`text-left p-3 rounded-lg border text-sm transition-all ${
                         form.behavior === b.value
                           ? b.value === 'supportive' ? 'border-accent-400 bg-accent-50' : 'border-danger-400 bg-danger-50'
@@ -874,6 +878,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                 </div>
               </div>
 
+              {form.behavior !== 'supportive' && (
               <div>
                 <label className="flex items-center text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">
                   Lens 2: Why do they resist?
@@ -901,7 +906,9 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                   </button>
                 </div>
               </div>
+              )}
 
+              {form.behavior !== 'supportive' && (
               <div>
                 <label className="flex items-center text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">
                   Lens 3: What lever is missing?
@@ -934,6 +941,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                   </button>
                 </div>
               </div>
+              )}
             </div>
 
             {/* Link to pain points */}
