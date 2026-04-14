@@ -57,7 +57,7 @@ function generateRecommendations(store: ReturnType<typeof useStore>): string[] {
   }
 
   // Displacement anxiety present
-  const hasDisplacement = store.effectiveStakeholders.some((s) => s.anxiety === 'displacement');
+  const hasDisplacement = store.effectiveStakeholders.some((s) => s.anxiety?.includes('displacement'));
   if (hasDisplacement) {
     recs.push(
       `Displacement anxiety detected among stakeholders. This is the hardest anxiety to address. Frame AI as augmentation, not replacement. Provide career orientation sessions and demonstrate how AI frees time for higher-value tasks (Cao et al., 2026).`
@@ -490,7 +490,7 @@ export default function ExportPage() {
                   </div>
                   <div style={{ background: '#dcfce7', borderRadius: '6px', padding: '8px 14px', flex: 1, textAlign: 'center' }}>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#166534' }}>
-                      {store.effectiveStakeholders.filter((s) => s.anxiety === 'ethical_engagement').length}
+                      {store.effectiveStakeholders.filter((s) => s.anxiety?.includes('ethical_engagement')).length}
                     </div>
                     <div style={{ fontSize: '9px', color: '#166534' }}>Potential Allies</div>
                   </div>
@@ -518,7 +518,7 @@ export default function ExportPage() {
                           {RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label}
                         </td>
                         <td style={styles.td}>
-                          {ANXIETY_TYPES.find((a) => a.value === s.anxiety)?.label}
+                          {s.anxiety?.map((av) => ANXIETY_TYPES.find((a) => a.value === av)?.label).filter(Boolean).join(', ')}
                         </td>
                         <td style={styles.td}>
                           {MISSING_LEVERS.find((l) => l.value === s.missing_lever)?.label}

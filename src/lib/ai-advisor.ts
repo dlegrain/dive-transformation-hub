@@ -59,7 +59,7 @@ function stakeholderSummary(stakeholders: Stakeholder[], painPoints: PainPoint[]
   return stakeholders
     .map((s) => {
       const behavior = s.behavior ? RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label : 'Unknown (group unsure)';
-      const anxiety = s.anxiety ? ANXIETY_TYPES.find((a) => a.value === s.anxiety)?.label : 'Unknown (group unsure)';
+      const anxiety = s.anxiety?.length ? s.anxiety.map((v) => ANXIETY_TYPES.find((a) => a.value === v)?.label).filter(Boolean).join(', ') : 'Unknown (group unsure)';
       const lever = s.missing_lever ? MISSING_LEVERS.find((l) => l.value === s.missing_lever)?.label : 'Unknown (group unsure)';
       const powerLabel = s.power ? POWER_LEVELS.find((p) => p.value === s.power)?.label : null;
       const interestLabel = s.interest ? INTEREST_LEVELS.find((i) => i.value === s.interest)?.label : null;
@@ -322,7 +322,7 @@ export function detectAlerts(
 
   // Conflict: professors with displacement anxiety targeted in Module 4
   const profDisplacement = stakeholders.some(
-    (s) => s.role === 'Professors' && s.anxiety === 'displacement'
+    (s) => s.role === 'Professors' && s.anxiety?.includes('displacement')
   );
   const profTargeted = tasks.some((t) => t.champion_target === 'Professors');
   if (profDisplacement && profTargeted) {
@@ -337,7 +337,7 @@ export function detectAlerts(
 
   // Professors mapped without ethical/pedagogical consideration
   const profStakeholders = stakeholders.filter((s) => s.role === 'Professors');
-  const hasEthicalProf = profStakeholders.some((s) => s.anxiety === 'ethical_engagement');
+  const hasEthicalProf = profStakeholders.some((s) => s.anxiety?.includes('ethical_engagement'));
   if (profStakeholders.length > 0 && !hasEthicalProf) {
     alerts.push({
       id: 'no-ethical-prof',

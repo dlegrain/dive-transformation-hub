@@ -31,21 +31,23 @@ function StakeholderMiniCard({ s, showAuthor }: { s: Stakeholder & { participant
         }`}>
           {RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label}
         </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-warning-50 text-warning-700 border border-warning-200">
-          {ANXIETY_TYPES.find((a) => a.value === s.anxiety)?.label}
-        </span>
+        {s.anxiety?.map((av) => (
+          <span key={av} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-warning-50 text-warning-700 border border-warning-200">
+            {ANXIETY_TYPES.find((a) => a.value === av)?.label}
+          </span>
+        ))}
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary-50 text-primary-700 border border-primary-200">
           {MISSING_LEVERS.find((l) => l.value === s.missing_lever)?.label}
         </span>
       </div>
       {s.generated_counter_measure && (
         <div className={`mt-3 p-3 rounded-lg text-xs leading-relaxed ${
-          s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
+          s.behavior === 'supportive' || s.anxiety?.includes('ethical_engagement')
             ? 'bg-accent-50 border border-accent-200'
             : 'bg-primary-50 border border-primary-200'
         }`}>
           <div className="flex items-center gap-1.5 mb-1">
-            {s.behavior === 'supportive' || s.anxiety === 'ethical_engagement' ? (
+            {s.behavior === 'supportive' || s.anxiety?.includes('ethical_engagement') ? (
               <Shield size={12} className="text-accent-600" />
             ) : (
               <AlertTriangle size={12} className="text-primary-600" />
@@ -117,7 +119,7 @@ export default function M2GroupComparison({ groupData }: Props) {
               </div>
               <div>
                 <div className="text-xl font-bold text-accent-600">
-                  {individualStakeholders.filter((s) => s.anxiety === 'ethical_engagement').length}
+                  {individualStakeholders.filter((s) => s.anxiety?.includes('ethical_engagement')).length}
                 </div>
                 <div className="text-xs text-gray-500">Potential allies</div>
               </div>

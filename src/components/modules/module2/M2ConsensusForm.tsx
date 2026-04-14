@@ -58,7 +58,7 @@ async function generateAICounterMeasure(
     power?: PowerLevel;
     interest?: InterestLevel;
     behavior?: ResistanceBehavior;
-    anxiety?: AnxietyType;
+    anxiety?: AnxietyType[];
     missing_lever?: MissingLever;
     linked_pain_point_ids?: string[];
   },
@@ -141,7 +141,7 @@ RULES:
   }
 
   const behaviorEntry = RESISTANCE_BEHAVIORS.find((b) => b.value === stakeholder.behavior);
-  const anxietyEntry = stakeholder.anxiety ? ANXIETY_TYPES.find((a) => a.value === stakeholder.anxiety) : null;
+  const anxietyEntries = stakeholder.anxiety?.length ? stakeholder.anxiety.map((v) => ANXIETY_TYPES.find((a) => a.value === v)).filter(Boolean) : null;
   const leverEntry = stakeholder.missing_lever ? MISSING_LEVERS.find((l) => l.value === stakeholder.missing_lever) : null;
   const powerEntry = stakeholder.power ? POWER_LEVELS.find((p) => p.value === stakeholder.power) : null;
   const interestEntry = stakeholder.interest ? INTEREST_LEVELS.find((i) => i.value === stakeholder.interest) : null;
@@ -167,13 +167,13 @@ RULES:
 - Description: ${behaviorEntry?.description || ''}
 - Severity: ${(behaviorEntry as { severity?: string })?.severity || 'unknown'}
 
-**Lens 2 — Root Cause (AI Anxiety):** ${anxietyEntry ? `${anxietyEntry.label} — ${anxietyEntry.description} (${anxietyEntry.source})` : 'Unknown — the group could not determine the root anxiety. Acknowledge this uncertainty in your strategy and offer a diagnosis question the group could ask the stakeholder to clarify.'}
+**Lens 2 — Root Cause (AI Anxiety):** ${anxietyEntries ? anxietyEntries.map((a) => `${a!.label} — ${a!.description} (${a!.source})`).join('; ') : 'Unknown — the group could not determine the root anxiety. Acknowledge this uncertainty in your strategy and offer a diagnosis question the group could ask the stakeholder to clarify.'}
 
 **Lens 3 — Missing Adoption Lever:** ${leverEntry ? `${leverEntry.label} — ${leverEntry.description}` : 'Unknown — the group could not identify the missing lever. Acknowledge this and suggest 2 likely candidates based on the role and behavior.'}
 
 Generate a strategy that specifically addresses:
 1. HOW to approach this person given their resistance behavior
-2. WHY they resist (the root anxiety) and how to address that specific fear${!anxietyEntry ? ' — anxiety is unknown, flag this and suggest a diagnostic question' : ''}
+2. WHY they resist (the root anxiety) and how to address that specific fear${!anxietyEntries ? ' — anxiety is unknown, flag this and suggest a diagnostic question' : ''}
 3. WHAT concrete action would provide the missing lever${!leverEntry ? ' — lever is unknown, suggest the 2 most likely candidates given the role' : ''}
 4. Their position in the Power/Interest matrix and what that means for prioritization`;
 
@@ -283,7 +283,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
     power: 'low' as PowerLevel,
     interest: 'high' as InterestLevel,
     behavior: undefined as ResistanceBehavior | undefined,
-    anxiety: undefined as AnxietyType | undefined,
+    anxiety: undefined as AnxietyType[] | undefined,
     missing_lever: undefined as MissingLever | undefined,
     notes: '',
     linked_pain_point_ids: [] as string[],
@@ -663,9 +663,11 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                 }`}>
                   {RESISTANCE_BEHAVIORS.find((b) => b.value === s.behavior)?.label}
                 </span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-warning-50 text-warning-700 border border-warning-200">
-                  {ANXIETY_TYPES.find((a) => a.value === s.anxiety)?.label}
-                </span>
+                {s.anxiety?.map((av) => (
+                  <span key={av} className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-warning-50 text-warning-700 border border-warning-200">
+                    {ANXIETY_TYPES.find((a) => a.value === av)?.label}
+                  </span>
+                ))}
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary-50 text-primary-700 border border-primary-200">
                   {MISSING_LEVERS.find((l) => l.value === s.missing_lever)?.label}
                 </span>
@@ -674,17 +676,17 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
               {/* Counter-measure or generate button */}
               {s.generated_counter_measure ? (
                 <div className={`rounded-lg border overflow-hidden ${
-                  s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
+                  s.behavior === 'supportive' || s.anxiety?.includes('ethical_engagement')
                     ? 'border-accent-200'
                     : 'border-primary-200'
                 }`}>
                   {/* Header bar */}
                   <div className={`flex items-center gap-1.5 px-3 py-2 ${
-                    s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
+                    s.behavior === 'supportive' || s.anxiety?.includes('ethical_engagement')
                       ? 'bg-accent-100'
                       : 'bg-primary-100'
                   }`}>
-                    {s.behavior === 'supportive' || s.anxiety === 'ethical_engagement' ? (
+                    {s.behavior === 'supportive' || s.anxiety?.includes('ethical_engagement') ? (
                       <Shield size={12} className="text-accent-600" />
                     ) : (
                       <Sparkles size={12} className="text-primary-600" />
@@ -695,7 +697,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                   </div>
                   {/* Content */}
                   <div className={`px-3 py-3 ${
-                    s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
+                    s.behavior === 'supportive' || s.anxiety?.includes('ethical_engagement')
                       ? 'bg-accent-50'
                       : 'bg-primary-50'
                   }`}>
@@ -885,21 +887,30 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
                   <Tooltip text="Cao et al. (2026) identified 3 types of AI anxiety. The root cause determines which solution works. 'Ethical engagement' (Hong et al., 2026) is actually positive — these people should help draft AI guidelines, not be treated as resistors." />
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {ANXIETY_TYPES.map((a) => (
-                    <button key={a.value} onClick={() => setForm({ ...form, anxiety: a.value as AnxietyType })}
-                      className={`text-left p-3 rounded-lg border text-sm transition-all ${
-                        form.anxiety === a.value
-                          ? a.value === 'ethical_engagement' ? 'border-accent-400 bg-accent-50' : 'border-warning-400 bg-warning-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}>
-                      <div className="font-medium text-gray-900">{a.label}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">{a.description}</div>
-                      <div className="text-[10px] text-gray-400 mt-1">{a.source}</div>
-                    </button>
-                  ))}
+                  {ANXIETY_TYPES.map((a) => {
+                    const isSelected = (form.anxiety || []).includes(a.value as AnxietyType);
+                    return (
+                      <button key={a.value} onClick={() => {
+                        const current = form.anxiety || [];
+                        const updated = isSelected
+                          ? current.filter((x) => x !== a.value)
+                          : [...current, a.value as AnxietyType];
+                        setForm({ ...form, anxiety: updated.length > 0 ? updated : undefined });
+                      }}
+                        className={`text-left p-3 rounded-lg border text-sm transition-all ${
+                          isSelected
+                            ? a.value === 'ethical_engagement' ? 'border-accent-400 bg-accent-50' : 'border-warning-400 bg-warning-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}>
+                        <div className="font-medium text-gray-900">{a.label}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{a.description}</div>
+                        <div className="text-[10px] text-gray-400 mt-1">{a.source}</div>
+                      </button>
+                    );
+                  })}
                   <button onClick={() => setForm({ ...form, anxiety: undefined })}
                     className={`text-left p-3 rounded-lg border text-sm transition-all col-span-2 ${
-                      form.anxiety === undefined ? 'border-gray-400 bg-gray-100' : 'border-gray-200 hover:border-gray-300'
+                      !form.anxiety ? 'border-gray-400 bg-gray-100' : 'border-gray-200 hover:border-gray-300'
                     }`}>
                     <div className="font-medium text-gray-500">I don't know yet</div>
                     <div className="text-xs text-gray-400 mt-0.5">Counter-measure can still be generated — Claude will note the uncertainty.</div>
@@ -1038,7 +1049,7 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
             </div>
             <div>
               <div className="text-xl font-bold text-accent-600">
-                {stakeholders.filter((s) => s.behavior === 'supportive' || s.anxiety === 'ethical_engagement').length}
+                {stakeholders.filter((s) => s.behavior === 'supportive' || s.anxiety?.includes('ethical_engagement')).length}
               </div>
               <div className="text-xs text-gray-500">Allies</div>
             </div>

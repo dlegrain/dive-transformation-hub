@@ -444,7 +444,7 @@ function ResistanceTab({ data, dark }: { data: PlenaryData; dark: boolean }) {
 
   const anxietyCounts = ANXIETY_TYPES.map((a) => ({
     name: a.label,
-    count: stakeholders.filter((s) => s.anxiety === a.value).length,
+    count: stakeholders.filter((s) => s.anxiety?.includes(a.value)).length,
   })).filter((a) => a.count > 0);
 
   const leverCounts = MISSING_LEVERS.map((l) => ({

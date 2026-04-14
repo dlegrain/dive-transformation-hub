@@ -76,7 +76,7 @@ export interface Stakeholder {
   power?: PowerLevel;
   interest?: InterestLevel;
   behavior?: ResistanceBehavior;   // optional — "I don't know" maps to undefined/null
-  anxiety?: AnxietyType;           // optional — "I don't know" maps to undefined/null
+  anxiety?: AnxietyType[];          // optional — "I don't know" maps to undefined/null; multiple anxieties allowed
   missing_lever?: MissingLever;    // optional — "I don't know" maps to undefined/null
   notes?: string;
   generated_counter_measure?: string;
