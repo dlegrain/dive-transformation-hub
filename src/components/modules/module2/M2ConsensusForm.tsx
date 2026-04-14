@@ -305,14 +305,13 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
 
   const debouncedSavePainPoints = useCallback(
     (newPainPoints: PainPoint[]) => {
-      if (!isEditable) return;
       store.setPainPoints(newPainPoints);
       if (painPointsTimer.current) clearTimeout(painPointsTimer.current);
       painPointsTimer.current = setTimeout(() => {
         savePainPoints(newPainPoints);
       }, SAVE_DEBOUNCE_MS);
     },
-    [isEditable, savePainPoints, store]
+    [savePainPoints, store]
   );
 
   // Debounced save + update store so chatbot sees data immediately

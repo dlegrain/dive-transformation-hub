@@ -368,6 +368,26 @@ export default function DocsPage() {
             </div>
             <ExternalLink size={16} className="text-gray-300 group-hover:text-indigo-500 shrink-0" />
           </a>
+          <a
+            href="https://superprompterdl.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 bg-white rounded-xl border border-emerald-200 p-6 hover:border-emerald-400 hover:shadow-md transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+              <GraduationCap size={20} className="text-emerald-600" />
+            </div>
+            <div className="flex-1">
+              <div className="text-base font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors mb-1">
+                SuperPrompter
+              </div>
+              <div className="text-sm text-gray-500">
+                An AI tool that helps you write better prompts — get more relevant, precise answers from any AI model.
+              </div>
+              <div className="text-xs text-emerald-500 mt-2 font-medium">superprompterdl.netlify.app</div>
+            </div>
+            <ExternalLink size={16} className="text-gray-300 group-hover:text-emerald-500 shrink-0" />
+          </a>
         </div>
       )}
     </div>
