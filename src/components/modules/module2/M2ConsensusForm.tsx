@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Plus, Trash2, CheckCircle, Lock, RotateCcw, AlertTriangle, Shield, Edit3, HelpCircle, Loader2, Sparkles } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Lock, RotateCcw, Shield, Edit3, HelpCircle, Loader2, Sparkles } from 'lucide-react';
 import { DIMENSIONS, RESISTANCE_BEHAVIORS, ANXIETY_TYPES, MISSING_LEVERS, MISSING_LEVERS_BY_ROLE, STAKEHOLDER_ROLES, DISCIPLINES, POWER_LEVELS, INTEREST_LEVELS } from '../../../lib/constants';
 // import { generateCounterMeasure } from '../../../lib/counter-measures'; // ARCHIVED — replaced by AI call
 import ConsensusStatusBadge from '../module1/ConsensusStatusBadge';
@@ -123,12 +123,16 @@ CULTURAL CONTEXT (Vietnamese universities):
 - Shared Governance trap: decisions slow because everyone wants input.
 
 RULES:
-- Write 2-3 concise paragraphs (max 200 words total)
-- Always cite sources: "(Author, Year)"
-- Be HIGHLY specific to THIS stakeholder's exact profile — reference their behavior type, anxiety type, missing lever, and quadrant by name
-- Cross-reference with their institution's maturity scores when relevant
-- End with one concrete, actionable next step the group can take THIS WEEK
-- Do NOT use markdown bold (**) or headers — write plain flowing text
+- Structure your response with exactly 3 short sections using these markdown headers:
+  ### 🎯 Approach
+  (1-2 sentences: how to engage given their behavior and quadrant)
+  ### 🧠 Root Cause
+  (1-2 sentences: the specific anxiety and how to address it)
+  ### ⚡ This Week
+  (1 concrete action the group can take immediately — bold the key action)
+- Keep each section tight — max 50 words per section
+- Always cite sources inline: "(Author, Year)"
+- Be HIGHLY specific: reference behavior type, anxiety, missing lever, and quadrant by name
 - Language: English`;
 
   // Asymmetric rule: block if behavior unknown, allow partial if anxiety/lever unknown
@@ -665,34 +669,54 @@ export default function M2ConsensusForm({ groupData, isValidator, onRefetch }: P
 
               {/* Counter-measure or generate button */}
               {s.generated_counter_measure ? (
-                <div className={`p-3 rounded-lg text-xs leading-relaxed ${
+                <div className={`rounded-lg border overflow-hidden ${
                   s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
-                    ? 'bg-accent-50 border border-accent-200'
-                    : 'bg-primary-50 border border-primary-200'
+                    ? 'border-accent-200'
+                    : 'border-primary-200'
                 }`}>
-                  <div className="flex items-center gap-1.5 mb-1">
+                  {/* Header bar */}
+                  <div className={`flex items-center gap-1.5 px-3 py-2 ${
+                    s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
+                      ? 'bg-accent-100'
+                      : 'bg-primary-100'
+                  }`}>
                     {s.behavior === 'supportive' || s.anxiety === 'ethical_engagement' ? (
                       <Shield size={12} className="text-accent-600" />
                     ) : (
-                      <AlertTriangle size={12} className="text-primary-600" />
+                      <Sparkles size={12} className="text-primary-600" />
                     )}
                     <span className="font-semibold text-[10px] uppercase tracking-wider text-gray-600">
                       {s.behavior === 'supportive' ? 'Leverage Strategy' : 'AI Counter-Measure'}
                     </span>
                   </div>
-                  <div className="prose prose-sm prose-gray max-w-none [&>p]:mb-1.5 [&>p:last-child]:mb-0 [&>ul]:my-1 [&>ul]:pl-4 [&>ol]:my-1 [&>ol]:pl-4 [&>li]:mb-0.5 text-gray-700">
+                  {/* Content */}
+                  <div className={`px-3 py-3 ${
+                    s.behavior === 'supportive' || s.anxiety === 'ethical_engagement'
+                      ? 'bg-accent-50'
+                      : 'bg-primary-50'
+                  }`}>
+                  <div className="prose prose-sm prose-gray max-w-none text-gray-700
+                    [&>h3]:text-[11px] [&>h3]:font-bold [&>h3]:uppercase [&>h3]:tracking-wider [&>h3]:text-gray-500 [&>h3]:mt-3 [&>h3]:mb-1 [&>h3:first-child]:mt-0
+                    [&>p]:text-xs [&>p]:leading-relaxed [&>p]:mb-0
+                    [&>ul]:text-xs [&>ul]:my-1 [&>ul]:pl-4
+                    [&>ol]:text-xs [&>ol]:my-1 [&>ol]:pl-4
+                    [&>li]:mb-0.5
+                    [&>strong]:font-semibold [&>strong]:text-gray-900">
                     <ReactMarkdown>{s.generated_counter_measure}</ReactMarkdown>
                   </div>
                   {isEditable && (
-                    <button
-                      onClick={() => handleGenerateCounterMeasure(s.id!)}
-                      disabled={generatingCM !== null || !s.behavior}
-                      className="mt-2 text-[10px] text-gray-400 hover:text-primary-500 underline disabled:opacity-40 disabled:cursor-not-allowed"
-                      title={!s.behavior ? 'Set Lens 1 (behavior) to enable regeneration' : 'Regenerate counter-measure'}
-                    >
-                      Regenerate
-                    </button>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={() => handleGenerateCounterMeasure(s.id!)}
+                        disabled={generatingCM !== null || !s.behavior}
+                        className="text-[10px] text-gray-400 hover:text-primary-500 underline disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={!s.behavior ? 'Set Lens 1 (behavior) to enable regeneration' : 'Regenerate counter-measure'}
+                      >
+                        Regenerate
+                      </button>
+                    </div>
                   )}
+                  </div>
                 </div>
               ) : (
                 isEditable && (
