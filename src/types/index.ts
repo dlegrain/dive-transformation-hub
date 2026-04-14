@@ -103,6 +103,9 @@ export interface SolutionCard {
   linked_quick_win?: string;
   sort_order: number;
   created_at?: string;
+  // Policy Builder fields
+  policy_draft?: string;
+  policy_answers?: Record<string, unknown>;
 }
 
 // ============================================================

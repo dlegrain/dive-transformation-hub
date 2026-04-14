@@ -181,6 +181,89 @@ RULES:
 }
 
 // ============================================================
+// AI Policy Charter generation
+// ============================================================
+
+export interface PolicyAnswers {
+  institutionType: string;
+  studentPopulation: string;
+  observedUses: string[];
+  topConcerns: string[];
+  posture: 'permissive' | 'guided' | 'restrictive';
+  responsibleBody: string;
+}
+
+const POLICY_SYSTEM_PROMPT = `You are an expert in AI governance in higher education. You help university leaders draft institutional AI charters that are practical, evidence-based, and adapted to their context.
+
+Your charter drafts must:
+1. Be structured in exactly 5 articles: (1) Scope & Definitions, (2) Acceptable Use by Context, (3) Transparency & Declaration, (4) Data Protection & Confidentiality, (5) Academic Integrity & Cognitive Skills
+2. Each article must include a short "Why this matters" note citing one of these sources:
+   - Coumont, L. (2025) — UNamur: 99% students use AI, 63% without declaring, 44% want clear rules, 31% circumvent detection
+   - VietnamPlus/MoET (2026) — Only 26% of universities have formal AI policies; Vietnam rolling out AI framework nationwide
+   - Sorbonne Paris 1 (2025) — 3-level framework (open/intermediate/restrictive), student declaration form
+   - Hong et al. (2026) — Without formal frameworks, peer mimicry leads to unethical use
+3. Include an Annex: Student AI Declaration Form with 4 levels (No use / Limited assistance / Shared production / Majority AI-assisted)
+4. Use clear, jargon-free English suitable for a Vietnamese university context
+5. Keep each article concise (80-120 words max)
+6. End with 3 source links:
+   - https://droit.pantheonsorbonne.fr/sites/default/files/2025-10/2025-Charte%20IA-VF%20EDS-Septembre2025.pdf
+   - https://researchportal.unamur.be/fr/studentTheses/usages-et-perceptions-de-lintelligence-artificielle-par-les-%C3%A9tudi/
+   - https://www.vietnam.vn/en/tri-tue-nhan-tao-trong-dai-hoc-su-dung-nhieu-chuan-bi-it`;
+
+const POSTURE_DESCRIPTIONS = {
+  permissive: 'AI use is encouraged across all contexts, provided it is declared and verified by the user.',
+  guided: 'AI use is authorized on a course-by-course basis, with each instructor defining rules for their course.',
+  restrictive: 'AI use is prohibited by default; it is only authorized in explicitly defined cases communicated in advance.',
+};
+
+export async function generatePolicyDraft(
+  answers: PolicyAnswers,
+  institutionName: string,
+): Promise<string> {
+  const userPrompt = `Generate an institutional AI charter for the following university:
+
+Institution: ${institutionName || answers.institutionType}
+Type & size: ${answers.institutionType}
+Observed AI uses on campus: ${answers.observedUses.join(', ')}
+Top concerns: ${answers.topConcerns.join(', ')}
+Chosen posture: ${answers.posture} — ${POSTURE_DESCRIPTIONS[answers.posture]}
+Responsible body: ${answers.responsibleBody}
+
+Generate the complete charter now, following the 5-article structure with "Why this matters" notes, and include the student declaration annex.`;
+
+  const devProxy = typeof window !== 'undefined' && import.meta.env.DEV ? 'http://localhost:3001' : null;
+
+  let content: string;
+
+  if (devProxy) {
+    const resp = await fetch(`${devProxy}/functions/v1/ai-advisor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemPrompt: POLICY_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+    if (!resp.ok) throw new Error(`Proxy error: ${resp.status}`);
+    const data = await resp.json();
+    content = data?.content || '';
+  } else {
+    const { supabase } = await import('./supabase');
+    const { data, error } = await supabase.functions.invoke('ai-advisor', {
+      body: {
+        systemPrompt: POLICY_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      },
+    });
+    if (error) throw error;
+    content = data?.content || '';
+  }
+
+  if (!content) throw new Error('Empty response from AI');
+  return content;
+}
+
+// ============================================================
 // Proactive alert detection
 // ============================================================
 

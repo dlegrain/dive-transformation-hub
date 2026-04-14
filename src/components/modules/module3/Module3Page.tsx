@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Plus, Trash2, GripVertical, Wrench, AlertTriangle, Lightbulb } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Wrench, AlertTriangle, Lightbulb, FileText, Shield } from 'lucide-react';
 import { SOLUTION_TEMPLATES, DIMENSIONS, MISSING_LEVERS } from '../../../lib/constants';
 import { useStore } from '../../../lib/store';
 import type { SolutionTarget, DifficultyLevel, SolutionStatus, DimensionKey, DimensionAssessment } from '../../../types';
+import PolicyBuilderModal from './PolicyBuilderModal';
 
 function dimAvg(d: DimensionAssessment): number {
   const known = [d.tools, d.data, d.culture].filter((v) => v > 0) as number[];
@@ -76,6 +77,7 @@ const statusColors: Record<SolutionStatus, string> = {
 export default function Module3Page() {
   const { solutions, setSolutions, effectiveDimensions, effectiveStakeholders } = useStore();
   const [showForm, setShowForm] = useState(false);
+  const [showPolicyBuilder, setShowPolicyBuilder] = useState(false);
   const [form, setForm] = useState({
     name: '',
     target: 'Students' as SolutionTarget,
@@ -191,6 +193,27 @@ export default function Module3Page() {
           </div>
         </div>
       )}
+
+      {/* AI Policy Builder CTA */}
+      <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 flex items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <Shield size={18} className="text-primary-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-gray-900">AI Policy Builder</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Answer 5 questions → get a structured draft AI charter for your institution, ready to submit to your rector.
+              Then vibe-code a chatbot that answers questions about it.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowPolicyBuilder(true)}
+          className="shrink-0 flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+        >
+          <FileText size={14} />
+          Build Charter
+        </button>
+      </div>
 
       {/* Solution cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -344,6 +367,11 @@ export default function Module3Page() {
           <Plus size={16} />
           Add Custom Solution
         </button>
+      )}
+
+      {/* Policy Builder Modal */}
+      {showPolicyBuilder && (
+        <PolicyBuilderModal onClose={() => setShowPolicyBuilder(false)} />
       )}
     </div>
   );
