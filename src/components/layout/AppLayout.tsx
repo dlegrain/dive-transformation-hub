@@ -24,12 +24,12 @@ export default function AppLayout() {
   useSyncToSupabase();
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {isAdmin && <AdminBar />}
         <ProgressBar />
-        <main ref={mainRef} className="flex-1 p-6 overflow-y-auto">
+        <main ref={mainRef} className="flex-1 p-6 overflow-y-auto min-h-0">
           <Outlet />
         </main>
       </div>
