@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { MessageSquare, X, Send, AlertTriangle, Info, AlertOctagon, Loader2 } from 'lucide-react';
 import { useStore } from '../../lib/store';
+import { useAuth } from '../../lib/auth-context';
+import { useGroupPolicy } from '../../lib/use-group-policy';
 import { buildSystemPrompt, detectAlerts, type ProactiveAlert } from '../../lib/ai-advisor';
 import { supabase } from '../../lib/supabase';
 import type { AIMessage } from '../../types';
@@ -31,6 +33,8 @@ export default function AIAdvisorPanel() {
   const location = useLocation();
 
   const store = useStore();
+  const { group } = useAuth();
+  const { policy } = useGroupPolicy(group?.id);
   const currentModule = getModuleFromPath(location.pathname);
   const messages = store.aiMessages[currentModule] || [];
 
@@ -75,6 +79,7 @@ export default function AIAdvisorPanel() {
         store.effectiveHiddenDimensions,
         store.effectiveCustomDimensions,
         store.painPoints,
+        policy.policy_draft ?? null,
       );
 
       const conversationMessages = [...messages, userMessage].map((m) => ({

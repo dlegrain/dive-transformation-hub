@@ -153,7 +153,13 @@ export function buildSystemPrompt(
   hiddenDimensions: DimensionKey[] = [],
   customDimensions: CustomDimension[] = [],
   painPoints: PainPoint[] = [],
+  policyDraft: string | null = null,
 ): string {
+  const policySection = policyDraft
+    ? `Module 3 — AI Policy Charter (group draft):
+${policyDraft}`
+    : `Module 3 — AI Policy Charter: (not generated yet)`;
+
   return `You are the DIVE AI Advisor, a strategic coach for university leaders planning AI adoption at their institution. You are embedded in the DIVE Transformation Hub workshop tool during a 4-day seminar in Ho Chi Minh City, Vietnam.
 
 INSTITUTION: ${institutionName || '(not specified yet)'}
@@ -173,6 +179,8 @@ ${stakeholderSummary(stakeholders, painPoints)}
 
 Module 3 — Solutions Arsenal:
 ${solutionSummary(solutions)}
+
+${policySection}
 
 Module 4 — 90-Day Plan:
 ${planSummary(tasks, kpis)}
