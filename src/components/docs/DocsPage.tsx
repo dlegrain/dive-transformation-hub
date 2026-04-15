@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe, GraduationCap, Code2, GitBranch, Star } from 'lucide-react';
 
 const articles = [
@@ -136,10 +136,29 @@ const repos = [
     tags: ['React', 'Supabase', 'Tailwind', 'Claude API'],
     color: 'blue',
   },
+  {
+    name: 'Signal',
+    description: 'Map AI needs across a group and discuss them — a collaborative tool to surface and prioritize where AI can help most.',
+    url: 'https://github.com/dlegrain/AI_Journey',
+    tags: ['AI Needs Mapping', 'Group Discussion', 'Collaboration'],
+    color: 'blue',
+  },
+  {
+    name: 'Student Hub',
+    description: 'A simple student monitoring dashboard — track progress, attendance, and engagement at a glance.',
+    url: 'https://github.com/dlegrain/student-hub',
+    tags: ['Student Monitoring', 'Dashboard', 'Education'],
+    color: 'blue',
+  },
 ];
 
 export default function DocsPage() {
   const [tab, setTab] = useState<'papers' | 'tutorials' | 'code'>('papers');
+
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (main) main.scrollTop = 0;
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -315,7 +334,7 @@ export default function DocsPage() {
                     </span>
                   ))}
                 </div>
-                <div className="text-xs text-blue-500 mt-2 font-medium">github.com/dlegrain/dive-transformation-hub</div>
+                <div className="text-xs text-blue-500 mt-2 font-medium">{repo.url.replace('https://', '')}</div>
               </div>
               <ExternalLink size={16} className="text-gray-300 group-hover:text-blue-500 shrink-0 mt-1" />
             </a>
@@ -387,6 +406,46 @@ export default function DocsPage() {
               <div className="text-xs text-emerald-500 mt-2 font-medium">superprompterdl.netlify.app</div>
             </div>
             <ExternalLink size={16} className="text-gray-300 group-hover:text-emerald-500 shrink-0" />
+          </a>
+          <a
+            href="https://dev-skills-dlegrain.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 bg-white rounded-xl border border-sky-200 p-6 hover:border-sky-400 hover:shadow-md transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center shrink-0">
+              <GraduationCap size={20} className="text-sky-600" />
+            </div>
+            <div className="flex-1">
+              <div className="text-base font-semibold text-gray-900 group-hover:text-sky-700 transition-colors mb-1">
+                Dev Skills
+              </div>
+              <div className="text-sm text-gray-500">
+                Core development concepts for vibe coders — understand what's happening under the hood when AI writes your code.
+              </div>
+              <div className="text-xs text-sky-500 mt-2 font-medium">dev-skills-dlegrain.netlify.app</div>
+            </div>
+            <ExternalLink size={16} className="text-gray-300 group-hover:text-sky-500 shrink-0" />
+          </a>
+          <a
+            href="https://aiscore.academy/homeabout.php"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 bg-white rounded-xl border border-amber-200 p-6 hover:border-amber-400 hover:shadow-md transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+              <GraduationCap size={20} className="text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <div className="text-base font-semibold text-gray-900 group-hover:text-amber-700 transition-colors mb-1">
+                AI Score Academy
+              </div>
+              <div className="text-sm text-gray-500">
+                A UNamur tool to evaluate and compare AI models on specific pedagogical tasks — find the best model for your teaching needs.
+              </div>
+              <div className="text-xs text-amber-500 mt-2 font-medium">aiscore.academy</div>
+            </div>
+            <ExternalLink size={16} className="text-gray-300 group-hover:text-amber-500 shrink-0" />
           </a>
         </div>
       )}
