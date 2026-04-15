@@ -433,6 +433,26 @@ export default function DocsPage() {
             <ExternalLink size={16} className="text-gray-300 group-hover:text-sky-500 shrink-0" />
           </a>
           <a
+            href="https://eloquent-churros-7764be.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 bg-white rounded-xl border border-rose-200 p-6 hover:border-rose-400 hover:shadow-md transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center shrink-0">
+              <GraduationCap size={20} className="text-rose-600" />
+            </div>
+            <div className="flex-1">
+              <div className="text-base font-semibold text-gray-900 group-hover:text-rose-700 transition-colors mb-1">
+                Google API Key Guide
+              </div>
+              <div className="text-sm text-gray-500">
+                Step-by-step guide to get your Google API key — required to use Google AI Studio and Gemini models in your projects.
+              </div>
+              <div className="text-xs text-rose-500 mt-2 font-medium">eloquent-churros-7764be.netlify.app</div>
+            </div>
+            <ExternalLink size={16} className="text-gray-300 group-hover:text-rose-500 shrink-0" />
+          </a>
+          <a
             href="https://aiscore.academy/homeabout.php"
             target="_blank"
             rel="noopener noreferrer"
