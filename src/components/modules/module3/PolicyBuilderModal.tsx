@@ -111,6 +111,14 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
 
   const TOTAL_STEPS = 5;
 
+  // Warn validator if they try to close with an unsaved draft
+  const hasUnsavedDraft = isValidator && !!generatedDraft && !saved;
+
+  const handleClose = () => {
+    if (hasUnsavedDraft && !confirm('You have an unsaved charter. Close anyway? It will be lost.')) return;
+    onClose();
+  };
+
   // When group draft loads/changes, sync local state
   useEffect(() => {
     if (!loadingPolicy) {
@@ -242,7 +250,7 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
             )}
           </div>
           {step !== 5 && (
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
               <X size={18} />
             </button>
           )}
@@ -570,7 +578,7 @@ export default function PolicyBuilderModal({ onClose }: PolicyBuilderModalProps)
           {/* Left */}
           {step !== 5 && (
             <button
-              onClick={() => isValidator && step > 0 && step < 5 ? setStep(step - 1) : onClose()}
+              onClick={() => isValidator && step > 0 && step < 5 ? setStep(step - 1) : handleClose()}
               className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               {(!isValidator || step === 0 || step === 6) ? 'Close' : (
