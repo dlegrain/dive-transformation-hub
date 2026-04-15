@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe, GraduationCap, Code2, GitBranch, Star } from 'lucide-react';
 
 const articles = [
@@ -154,11 +154,6 @@ const repos = [
 
 export default function DocsPage() {
   const [tab, setTab] = useState<'papers' | 'tutorials' | 'code'>('papers');
-
-  useEffect(() => {
-    const main = document.querySelector('main');
-    if (main) main.scrollTop = 0;
-  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-8">
