@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { Plus, Trash2, GripVertical, Wrench, AlertTriangle, Lightbulb, FileText, Shield } from 'lucide-react';
 import { SOLUTION_TEMPLATES, DIMENSIONS, MISSING_LEVERS } from '../../../lib/constants';
 import { useStore } from '../../../lib/store';
+import { useAuth } from '../../../lib/auth-context';
+import { useGroupPolicy } from '../../../lib/use-group-policy';
+import { useValidator } from '../../../lib/use-validator';
+import { supabase } from '../../../lib/supabase';
 import type { SolutionTarget, DifficultyLevel, SolutionStatus, DimensionKey, DimensionAssessment } from '../../../types';
 import PolicyBuilderModal from './PolicyBuilderModal';
 
@@ -92,6 +96,10 @@ const statusColors: Record<SolutionStatus, string> = {
 
 export default function Module3Page() {
   const { solutions, setSolutions, effectiveDimensions, effectiveStakeholders } = useStore();
+  const { participant, group } = useAuth();
+  const { policy, refetch: refetchPolicy } = useGroupPolicy(group?.id);
+  const validator = useValidator(group?.id, 'module3');
+  const isValidator = validator.validatorId === participant?.id;
   const [showForm, setShowForm] = useState(false);
   const [showPolicyBuilder, setShowPolicyBuilder] = useState(false);
   const [form, setForm] = useState({
@@ -212,7 +220,7 @@ export default function Module3Page() {
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* AI Policy Builder */}
         {(() => {
-          const hasCharter = solutions.some((s) => (s as any).platform_used === 'DIVE Policy Builder');
+          const hasCharter = !!policy.policy_draft;
           return (
             <div className={`rounded-lg border p-4 flex items-center justify-between gap-3 ${hasCharter ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-gray-50'}`}>
               <div className="flex items-start gap-3">
@@ -239,6 +247,48 @@ export default function Module3Page() {
 
       {/* Solution cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* AI Policy Charter card */}
+        {policy.policy_draft && (
+          <div
+            onClick={() => setShowPolicyBuilder(true)}
+            className="bg-white rounded-lg border border-primary-200 p-5 relative group cursor-pointer hover:border-primary-400 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Shield size={14} className="text-primary-600 shrink-0" />
+                <h3 className="font-semibold text-gray-900">AI Policy Charter</h3>
+              </div>
+              {/* Validator-only delete */}
+              {isValidator && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!group?.id) return;
+                    if (!confirm('Delete the group AI Policy Charter? This cannot be undone.')) return;
+                    await supabase.functions.invoke('group-data', {
+                      body: { action: 'save_m3_policy', group_id: group.id, policy_draft: null, policy_answers: null },
+                    });
+                    refetchPolicy();
+                  }}
+                  className="text-gray-300 hover:text-danger-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              <span className="px-2 py-0.5 text-xs font-medium rounded border bg-accent-100 text-accent-700 border-accent-200">Low</span>
+              <span className="px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600">Administration</span>
+              <span className="px-2 py-0.5 text-xs font-medium rounded bg-primary-100 text-primary-600">Phase 1</span>
+            </div>
+            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+              Institutional AI charter — scope, acceptable use, transparency, data protection, academic integrity.
+            </p>
+            <p className="text-xs text-primary-600 font-medium">Click to open, edit or download →</p>
+          </div>
+        )}
+
         {solutions.map((sol) => (
           <div
             key={sol.id}

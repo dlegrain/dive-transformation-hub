@@ -746,6 +746,46 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── SAVE M3 GROUP POLICY ───────────────────────────────────
+    if (action === "save_m3_policy") {
+      const { group_id, policy_draft, policy_answers } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      const { error } = await supabase
+        .from("dive_groups")
+        .update({
+          m3_policy_draft: policy_draft ?? null,
+          m3_policy_answers: policy_answers ?? null,
+        })
+        .eq("id", group_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── GET M3 GROUP POLICY ────────────────────────────────────
+    if (action === "get_m3_policy") {
+      const { group_id } = body;
+      if (!group_id) throw new Error("group_id is required");
+
+      const { data: group, error } = await supabase
+        .from("dive_groups")
+        .select("m3_policy_draft, m3_policy_answers")
+        .eq("id", group_id)
+        .single();
+      if (error) throw error;
+
+      return new Response(
+        JSON.stringify({
+          policy_draft: group?.m3_policy_draft ?? null,
+          policy_answers: group?.m3_policy_answers ?? null,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: `Unknown action: ${action}` }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
