@@ -130,6 +130,13 @@ const moduleConfig: Record<number, { label: string; color: string; icon: React.E
 
 const repos = [
   {
+    name: 'Open WebUI',
+    description: 'Self-hostable AI interface — run ChatGPT-like chat on your own server, connected to any LLM (Ollama, OpenAI, etc.). No data leaves your infrastructure.',
+    url: 'https://hub.docker.com/r/ghcr.io/open-webui/open-webui',
+    tags: ['Docker', 'Self-hosted', 'LLM', 'Privacy'],
+    color: 'violet',
+  },
+  {
     name: 'DIVE Transformation Hub',
     description: 'The source code of this app — a React/Supabase workshop tool for AI adoption strategy in Vietnamese higher education.',
     url: 'https://github.com/dlegrain/dive-transformation-hub',
@@ -303,37 +310,40 @@ export default function DocsPage() {
           <p className="text-sm text-gray-500 mb-6">
             Open-source repositories built for this seminar. Feel free to explore, fork, and build on them.
           </p>
-          {repos.map((repo) => (
-            <a
-              key={repo.url}
-              href={repo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-start gap-4 bg-white rounded-xl border border-gray-200 p-6 hover:border-blue-400 hover:shadow-md transition-all group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                <GitBranch size={20} className="text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="text-base font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                    {repo.name}
+          {repos.map((repo) => {
+            const isViolet = repo.color === 'violet';
+            return (
+              <a
+                key={repo.url}
+                href={repo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-start gap-4 bg-white rounded-xl border p-6 hover:shadow-md transition-all group ${isViolet ? 'border-violet-200 hover:border-violet-400' : 'border-gray-200 hover:border-blue-400'}`}
+              >
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isViolet ? 'bg-violet-50' : 'bg-blue-50'}`}>
+                  <GitBranch size={20} className={isViolet ? 'text-violet-600' : 'text-blue-600'} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`text-base font-semibold text-gray-900 transition-colors ${isViolet ? 'group-hover:text-violet-700' : 'group-hover:text-blue-700'}`}>
+                      {repo.name}
+                    </div>
+                    <Star size={13} className="text-gray-300 group-hover:text-yellow-400 transition-colors" />
                   </div>
-                  <Star size={13} className="text-gray-300 group-hover:text-yellow-400 transition-colors" />
+                  <div className="text-sm text-gray-500 mb-3">{repo.description}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {repo.tags.map((tag) => (
+                      <span key={tag} className={`px-2 py-0.5 text-xs rounded-full font-medium ${isViolet ? 'bg-violet-50 text-violet-600' : 'bg-blue-50 text-blue-600'}`}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className={`text-xs mt-2 font-medium ${isViolet ? 'text-violet-500' : 'text-blue-500'}`}>{repo.url.replace('https://', '')}</div>
                 </div>
-                <div className="text-sm text-gray-500 mb-3">{repo.description}</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {repo.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full font-medium">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="text-xs text-blue-500 mt-2 font-medium">{repo.url.replace('https://', '')}</div>
-              </div>
-              <ExternalLink size={16} className="text-gray-300 group-hover:text-blue-500 shrink-0 mt-1" />
-            </a>
-          ))}
+                <ExternalLink size={16} className={`text-gray-300 shrink-0 mt-1 ${isViolet ? 'group-hover:text-violet-500' : 'group-hover:text-blue-500'}`} />
+              </a>
+            );
+          })}
         </div>
       )}
 
