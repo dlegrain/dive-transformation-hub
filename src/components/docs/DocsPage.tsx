@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe, GraduationCap, Code2, GitBranch, Star } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { ExternalLink, BookOpen, FlaskConical, Users, Lightbulb, CalendarCheck, Radar, Globe, GraduationCap, Code2, GitBranch, Star, Trophy } from 'lucide-react';
 
 const articles = [
   {
@@ -160,7 +160,9 @@ const repos = [
 ];
 
 export default function DocsPage() {
-  const [tab, setTab] = useState<'papers' | 'tutorials' | 'code'>('papers');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = (searchParams.get('tab') ?? 'papers') as 'papers' | 'tutorials' | 'code' | 'works';
+  const setTab = (t: 'papers' | 'tutorials' | 'code' | 'works') => setSearchParams({ tab: t });
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -208,6 +210,17 @@ export default function DocsPage() {
         >
           <Code2 size={15} />
           Code
+        </button>
+        <button
+          onClick={() => setTab('works')}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+            tab === 'works'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Trophy size={15} />
+          Your Own Works
         </button>
       </div>
 
@@ -472,6 +485,101 @@ export default function DocsPage() {
             </div>
             <ExternalLink size={16} className="text-gray-300 group-hover:text-amber-500 shrink-0" />
           </a>
+        </div>
+      )}
+
+      {tab === 'works' && (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500 mb-6">
+            Projects built by seminar participants during the vibe coding session (Day 3). Each one was created from scratch using AI.
+          </p>
+          {([
+            {
+              name: 'Linh OnThiMY',
+              border: 'border-violet-200',
+              bg: 'bg-violet-100',
+              icon: 'text-violet-600',
+              link: 'text-violet-600 hover:text-violet-800',
+              projects: [
+                { url: 'https://69df4b35b124721e8c4fbd74--dainty-zabaione-5b3d21.netlify.app/', label: '69df4b35b124721e8c4fbd74--dainty-zabaione-5b3d21.netlify.app' },
+              ],
+            },
+            {
+              name: 'Le Viet Thuy',
+              border: 'border-blue-200',
+              bg: 'bg-blue-100',
+              icon: 'text-blue-600',
+              link: 'text-blue-600 hover:text-blue-800',
+              projects: [
+                { url: 'https://sage-alfajores-5e0a37.netlify.app/', label: 'sage-alfajores-5e0a37.netlify.app' },
+              ],
+            },
+            {
+              name: 'Tran Phuc Loc',
+              border: 'border-emerald-200',
+              bg: 'bg-emerald-100',
+              icon: 'text-emerald-600',
+              link: 'text-emerald-600 hover:text-emerald-800',
+              projects: [
+                { url: 'https://spontaneous-alfajores-11b861.netlify.app/', label: 'spontaneous-alfajores-11b861.netlify.app' },
+                { url: 'https://effervescent-banoffee-92be41.netlify.app/', label: 'effervescent-banoffee-92be41.netlify.app' },
+                { url: 'https://ailaw2026.netlify.app/', label: 'ailaw2026.netlify.app' },
+              ],
+            },
+            {
+              name: 'Nguyễn Đức Huy',
+              border: 'border-rose-200',
+              bg: 'bg-rose-100',
+              icon: 'text-rose-600',
+              link: 'text-rose-600 hover:text-rose-800',
+              projects: [
+                { url: 'https://eloquent-churros-7764be.netlify.app/', label: 'eloquent-churros-7764be.netlify.app' },
+              ],
+            },
+            {
+              name: 'Kieu Linh Trinh',
+              border: 'border-amber-200',
+              bg: 'bg-amber-100',
+              icon: 'text-amber-600',
+              link: 'text-amber-600 hover:text-amber-800',
+              projects: [
+                { url: 'https://ai-cfvgsupport.netlify.app/', label: 'ai-cfvgsupport.netlify.app' },
+              ],
+            },
+            {
+              name: 'Ánh Đào Ngọc',
+              border: 'border-sky-200',
+              bg: 'bg-sky-100',
+              icon: 'text-sky-600',
+              link: 'text-sky-600 hover:text-sky-800',
+              projects: [
+                { url: 'https://tangerine-chimera-70144e.netlify.app/', label: 'tangerine-chimera-70144e.netlify.app' },
+              ],
+            },
+          ] as const).map(({ name, border, bg, icon, link, projects }) => (
+            <div key={name} className={`bg-white rounded-xl border ${border} p-5`}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-7 h-7 rounded-full ${bg} flex items-center justify-center`}>
+                  <Trophy size={14} className={icon} />
+                </div>
+                <span className="font-semibold text-gray-900 text-sm">{name}</span>
+              </div>
+              <div className="space-y-2">
+                {projects.map(({ url, label }) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-2 text-sm ${link} hover:underline transition-colors`}
+                  >
+                    <ExternalLink size={13} className="shrink-0" />
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
