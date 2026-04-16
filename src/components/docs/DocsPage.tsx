@@ -505,13 +505,14 @@ export default function DocsPage() {
               ],
             },
             {
-              name: 'Le Viet Thuy',
+              name: 'Lê Việt Thủy',
               border: 'border-blue-200',
               bg: 'bg-blue-100',
               icon: 'text-blue-600',
               link: 'text-blue-600 hover:text-blue-800',
               projects: [
                 { url: 'https://sage-alfajores-5e0a37.netlify.app/', label: 'sage-alfajores-5e0a37.netlify.app' },
+                { url: 'https://neu-performance-dashboard-885607860780.us-west1.run.app/', label: 'neu-performance-dashboard-885607860780.us-west1.run.app' },
               ],
             },
             {
