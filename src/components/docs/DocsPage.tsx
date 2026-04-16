@@ -461,7 +461,7 @@ export default function DocsPage() {
               <div className="text-sm text-gray-500">
                 Step-by-step guide to get your Google API key — required to use Google AI Studio and Gemini models in your projects.
               </div>
-              <div className="text-xs text-rose-500 mt-2 font-medium">eloquent-churros-7764be.netlify.app</div>
+              <div className="text-xs text-rose-500 mt-2 font-medium">eloquent-churros-7764be.netlify.app · by Nguyễn Đức Huy</div>
             </div>
             <ExternalLink size={16} className="text-gray-300 group-hover:text-rose-500 shrink-0" />
           </a>
